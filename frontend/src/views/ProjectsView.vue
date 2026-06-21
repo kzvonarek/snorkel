@@ -35,18 +35,22 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Thumbnail from '@/components/ui/Thumbnail.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { projects } from '@/data/projects.js'
+import { listSimulations } from '@/api/simulation.js'
+import { listReports } from '@/api/report.js'
 
 const filters = ['All', 'Ready', 'Running', 'Drafts']
 const activeFilter = ref('All')
+const liveProjects = ref([])
 
 const filtered = computed(() => {
-  if (activeFilter.value === 'All') return projects
+  const source = liveProjects.value.length ? liveProjects.value : projects
+  if (activeFilter.value === 'All') return source
   const map = { Ready: 'Ready', Running: 'Running', Drafts: 'Draft' }
-  return projects.filter(p => p.status === map[activeFilter.value])
+  return source.filter(p => p.status === map[activeFilter.value])
 })
 
 function badgeVariant(status) {
@@ -54,6 +58,50 @@ function badgeVariant(status) {
   if (status === 'Running') return 'running'
   return 'draft'
 }
+
+function mapSimulation(simulation) {
+  const status = simulation.status || 'Draft'
+  return {
+    id: simulation.simulation_id,
+    name: simulation.name || simulation.project_name || simulation.simulation_id,
+    status: status === 'ready' ? 'Ready' : status === 'running' ? 'Running' : 'Draft',
+    lastRun: simulation.updated_at || simulation.created_at || 'Recently',
+    color: '#4B5FA8',
+    glyph: '◉',
+    pmfScore: simulation.pmf_score || null,
+  }
+}
+
+function mapReport(report) {
+  return {
+    id: report.report_id,
+    name: report.title || report.report_id,
+    status: 'Ready',
+    lastRun: report.created_at || 'Recently',
+    color: '#3B7355',
+    glyph: '▤',
+    pmfScore: report.pmf_score || null,
+  }
+}
+
+onMounted(async () => {
+  try {
+    const [simulationsRes, reportsRes] = await Promise.all([
+      listSimulations(),
+      listReports(),
+    ])
+
+    const simulations = Array.isArray(simulationsRes?.data) ? simulationsRes.data : simulationsRes?.data?.data || []
+    const reports = Array.isArray(reportsRes?.data) ? reportsRes.data : reportsRes?.data?.data || []
+
+    liveProjects.value = [
+      ...simulations.map(mapSimulation),
+      ...reports.map(mapReport),
+    ]
+  } catch (error) {
+    liveProjects.value = []
+  }
+})
 </script>
 
 <style scoped>

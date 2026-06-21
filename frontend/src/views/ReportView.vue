@@ -2,6 +2,19 @@
   <div class="report-layout">
     <!-- Section nav -->
     <nav class="section-nav">
+      <div class="section-nav-heading section-nav-heading--compact">Live reports</div>
+      <div v-if="loadingReports" class="report-source-note">Loading from backend…</div>
+      <div v-else-if="reportError" class="report-source-note">{{ reportError }}</div>
+      <button
+        v-for="report in reports"
+        :key="report.report_id"
+        class="report-btn"
+        :class="{ active: selectedReportId === report.report_id }"
+        @click="selectReport(report.report_id)"
+      >
+        {{ report.report_id }}
+      </button>
+
       <div class="section-nav-heading">Sections</div>
       <button
         v-for="s in sections"
@@ -16,8 +29,13 @@
     <div class="pdf-mock">
       <div class="pdf-page">
         <div class="pdf-header">
-          <div class="pdf-title">PMF Report — FinTrack v2</div>
-          <div class="pdf-date">Generated {{ new Date().toLocaleDateString() }}</div>
+          <div class="pdf-title">{{ reportTitle }}</div>
+          <div class="pdf-date">Generated {{ reportDate }}</div>
+        </div>
+
+        <div v-if="selectedReportDetails" class="report-meta-card">
+          <div><strong>Simulation:</strong> {{ selectedReportDetails.simulation_id }}</div>
+          <div><strong>Status:</strong> {{ selectedReportDetails.status }}</div>
         </div>
 
         <div v-if="activeSection === 'exec'" class="pdf-section">
@@ -52,7 +70,7 @@
 
         <div v-else-if="activeSection === 'method'" class="pdf-section">
           <h2>Methodology</h2>
-          <p class="method-text">{{ methodology }}</p>
+          <p class="method-text">{{ methodologyText }}</p>
         </div>
       </div>
     </div>
@@ -81,6 +99,12 @@
         >{{ edit }}</button>
       </div>
 
+      <div v-if="selectedReportDetails" class="report-source-card">
+        <div class="detail-heading">Backend report</div>
+        <div class="report-source-title">{{ selectedReportDetails.report_id }}</div>
+        <div class="report-source-note">{{ selectedReportDetails.simulation_requirement || 'Loaded from the live backend' }}</div>
+      </div>
+
       <div class="chat-input-row">
         <input
           v-model="userInput"
@@ -95,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import ChatBubble from '@/components/ui/ChatBubble.vue'
 import BarChartCss from '@/components/ui/BarChartCss.vue'
 import Heatmap from '@/components/ui/Heatmap.vue'
@@ -104,12 +128,70 @@ import {
   suggestedEdits, cannedReplies
 } from '@/data/report.js'
 import { sentimentBySegment, adoptionHeatmap, topObjections } from '@/data/results.js'
+import { getReport, listReports } from '@/api/report'
 
 const activeSection = ref('exec')
 const execSummary = ref(executiveSummary)
+const methodologyText = ref(methodology)
+const reportTitle = ref('PMF Report — FinTrack v2')
+const reportDate = ref(new Date().toLocaleDateString())
 const chat = ref(chatHistory.map(m => ({ ...m })))
 const userInput = ref('')
 const chatEl = ref(null)
+const reports = ref([])
+const selectedReportId = ref('')
+const selectedReportDetails = ref(null)
+const loadingReports = ref(false)
+const reportError = ref('')
+
+function formatDate(value) {
+  if (!value) return new Date().toLocaleDateString()
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleDateString()
+}
+
+async function selectReport(reportId) {
+  selectedReportId.value = reportId
+  const summary = reports.value.find(report => report.report_id === reportId)
+
+  try {
+    const response = await getReport(reportId)
+    const data = response?.data ?? response
+    selectedReportDetails.value = data
+    reportTitle.value = data?.simulation_requirement ? `PMF Report — ${data.simulation_requirement}` : `PMF Report — ${reportId}`
+    reportDate.value = formatDate(data?.created_at || data?.completed_at)
+    execSummary.value = data?.outline?.summary || executiveSummary
+    methodologyText.value = data?.outline?.methodology || methodology
+  } catch {
+    selectedReportDetails.value = summary || null
+    reportTitle.value = summary?.simulation_requirement ? `PMF Report — ${summary.simulation_requirement}` : `PMF Report — ${reportId}`
+    reportDate.value = formatDate(summary?.created_at)
+  }
+}
+
+async function loadReports() {
+  loadingReports.value = true
+  reportError.value = ''
+
+  try {
+    const response = await listReports()
+    const data = response?.data ?? response
+    reports.value = Array.isArray(data) ? data : []
+
+    if (reports.value.length) {
+      await selectReport(reports.value[0].report_id)
+    }
+  } catch {
+    reportError.value = 'Backend report list unavailable, showing the local mock report.'
+    reports.value = []
+    selectedReportDetails.value = null
+  } finally {
+    loadingReports.value = false
+  }
+}
+
+onMounted(loadReports)
 
 function scrollChat() {
   nextTick(() => { if (chatEl.value) chatEl.value.scrollTop = chatEl.value.scrollHeight })
@@ -172,6 +254,35 @@ function applyEdit(edit) {
   margin-bottom: 6px;
   padding: 0 6px;
 }
+
+.section-nav-heading--compact {
+  margin-bottom: 2px;
+}
+
+.report-btn {
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.report-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.report-source-note {
+  font-size: 11.5px;
+  color: var(--text-3);
+  line-height: 1.5;
+  padding: 0 6px;
+}
 .section-btn {
   text-align: left;
   padding: 7px 10px;
@@ -211,6 +322,19 @@ function applyEdit(edit) {
   color: var(--ink);
 }
 .pdf-date { font-size: 12px; color: var(--text-3); }
+
+.report-meta-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 18px;
+}
 
 .pdf-section h2 {
   font-family: 'Newsreader', serif;
@@ -291,6 +415,22 @@ function applyEdit(edit) {
   letter-spacing: 0.06em;
   color: var(--text-3);
   margin-bottom: 2px;
+}
+
+.report-source-card {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.report-source-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 .edit-chip {
   text-align: left;
