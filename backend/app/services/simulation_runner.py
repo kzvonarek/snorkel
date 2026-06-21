@@ -24,7 +24,7 @@ from ..utils.locale import get_locale, set_locale
 from .redis_memory_writer import RedisMemoryManager
 from .simulation_ipc import SimulationIPCClient, CommandType, IPCResponse
 
-logger = get_logger('mirofish.simulation_runner')
+logger = get_logger('snorkel.simulation_runner')
 
 # 标记是否已注册清理函数
 _cleanup_registered = False

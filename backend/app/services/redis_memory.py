@@ -27,7 +27,7 @@ class MemorySearchHit:
 
 
 class RedisMemoryClient:
-    NAMESPACE_PREFIX = "mirofish"
+    NAMESPACE_PREFIX = "snorkel"
 
     def __init__(self, base_url: str | None = None, timeout: float | None = None):
         self.base_url = base_url or Config.AMS_BASE_URL
@@ -44,7 +44,7 @@ class RedisMemoryClient:
 
     @staticmethod
     def namespace(simulation_id: str) -> str:
-        return f"mirofish:sim:{simulation_id}"
+        return f"snorkel:sim:{simulation_id}"
 
     def _client(self):
         if not self.enabled:

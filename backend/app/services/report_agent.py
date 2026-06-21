@@ -33,7 +33,7 @@ from .memory_tools import (
 )
 from .web_tools import WebToolsService
 
-logger = get_logger('mirofish.report_agent')
+logger = get_logger('snorkel.report_agent')
 
 
 class ReportLogger:
@@ -356,8 +356,8 @@ class ReportConsoleLogger:
         
         # 添加到 report_agent 相关的 logger
         loggers_to_attach = [
-            'mirofish.report_agent',
-            'mirofish.memory_tools',
+            'snorkel.report_agent',
+            'snorkel.memory_tools',
         ]
         
         for logger_name in loggers_to_attach:
@@ -372,8 +372,8 @@ class ReportConsoleLogger:
         
         if self._file_handler:
             loggers_to_detach = [
-                'mirofish.report_agent',
-                'mirofish.memory_tools',
+                'snorkel.report_agent',
+                'snorkel.memory_tools',
             ]
             
             for logger_name in loggers_to_detach:
