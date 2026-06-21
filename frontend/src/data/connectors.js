@@ -2,6 +2,7 @@ export const connectorGroups = [
   {
     category: 'Product behaviour',
     items: [
+      { id: 'posthog', name: 'PostHog', icon: 'PH', connected: true, match: 94, progress: 94 },
       { id: 'mixpanel',  name: 'Mixpanel',         icon: '📊', connected: true,  match: 92, progress: 92 },
       { id: 'amplitude', name: 'Amplitude',         icon: '📈', connected: false, match: 78, progress: 0  },
       { id: 'fullstory', name: 'FullStory',          icon: '🎥', connected: false, match: 65, progress: 0  },
