@@ -35,6 +35,96 @@ Prerequisites:
 - Python `>=3.11,<3.13`
 - `uv` installed for Python dependency management
 
+AMS gives agents persistent long-term memory across simulation rounds using Redis. Without it the app still works but agents won't remember previous rounds.
+
+```env
+AMS_ENABLED=true
+AMS_BASE_URL=http://localhost:8000          # where the memory API runs
+AMS_API_KEY=                               # leave blank if DISABLE_AUTH=true
+AMS_TIMEOUT=30
+AMS_GENERATION_MODEL=gpt-4o-mini           # model used by AMS for memory summarization
+AMS_EMBEDDING_MODEL=text-embedding-3-small # model used by AMS for vector search
+```
+
+> **Note:** AMS uses OpenAI's API for its own embedding and generation calls, independent of your `LLM_API_KEY`. Make sure the key you use has access to the models specified in `AMS_GENERATION_MODEL` and `AMS_EMBEDDING_MODEL` if you're using OpenAI.
+
+### Optional — Third-party integrations
+
+All three integrations are **opt-in** and fail gracefully — the app runs normally with none of them configured.
+
+#### The Token Company (prompt compression)
+
+Compresses LLM prompts before every agent call, reducing token usage and cost by 10–40%.
+
+1. Get an API key at [thetokencompany.com](https://thetokencompany.com)
+2. Add to `.env`:
+
+```env
+TOKEN_COMPANY_ENABLED=true
+TOKEN_COMPANY_API_KEY=ttc-your-key-here
+TOKEN_COMPANY_MIN_CHARS=2000    # don't compress prompts shorter than this
+```
+
+The hook sits inside `LLMClient.chat()` and runs transparently on every agent LLM call. JSON-mode calls are excluded automatically.
+
+#### Browserbase / Stagehand (agent web browsing)
+
+Gives the report agent three new tools — `browse_web`, `extract_web_data`, and `observe_web` — so it can fetch live web context using a real headless browser, not just simulation graph data.
+
+1. Sign up at [browserbase.com](https://browserbase.com) and create a project.
+2. Install Playwright's Chromium runtime (needed by the Stagehand client):
+
+```bash
+cd backend
+playwright install chromium
+```
+
+3. Add to `.env`:
+
+```env
+BROWSERBASE_ENABLED=true
+BROWSERBASE_API_KEY=your-api-key
+BROWSERBASE_PROJECT_ID=your-project-id
+```
+
+The web tools only appear in the agent's tool list when `BROWSERBASE_ENABLED=true` and both credentials are present.
+
+#### Sentry (error monitoring & performance tracing)
+
+Auto-captures unhandled exceptions across all Flask routes and creates performance traces for:
+- Every HTTP request (via `FlaskIntegration`)
+- `generate_report`, `plan_outline`, `_generate_section_react`, `chat` (agent-level)
+- Each individual tool call with latency tagging
+- Every LLM call with model + token metadata
+
+1. Create a project at [sentry.io](https://sentry.io) and copy your DSN.
+2. Add to `.env`:
+
+```env
+SENTRY_DSN=https://your-dsn@oXXXXXX.ingest.sentry.io/XXXXXXX
+SENTRY_TRACES_SAMPLE_RATE=0.2   # 20% of transactions; set to 1.0 in dev
+SENTRY_ENVIRONMENT=production
+```
+
+### Optional — tuning
+
+```env
+FLASK_DEBUG=True
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5001
+OASIS_DEFAULT_MAX_ROUNDS=10
+REPORT_AGENT_MAX_TOOL_CALLS=5
+REPORT_AGENT_MAX_REFLECTION_ROUNDS=2
+REPORT_AGENT_TEMPERATURE=0.5
+```
+
+---
+
+## Running Locally
+
+### 1. Start Redis + Agent Memory Server (optional)
+
+If you want agent memory, start the Redis/AMS services:
 1. Configure environment variables:
 
 ```bash

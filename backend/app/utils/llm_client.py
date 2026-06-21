@@ -41,31 +41,48 @@ class LLMClient:
     ) -> str:
         """
         发送聊天请求
-        
+
         Args:
             messages: 消息列表
             temperature: 温度参数
             max_tokens: 最大token数
             response_format: 响应格式（如JSON模式）
-            
+
         Returns:
             模型响应文本
         """
-        kwargs = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        }
-        
-        if response_format:
-            kwargs["response_format"] = response_format
-        
-        response = self.client.chat.completions.create(**kwargs)
-        content = response.choices[0].message.content
-        # 部分模型（如MiniMax M2.5）会在content中包含<think>思考内容，需要移除
-        content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
-        return content
+        # Compress prompts via The Token Company (skip for JSON-mode calls)
+        if response_format is None:
+            from .token_compressor import get_compressor
+            messages = get_compressor().compress_messages(messages)
+
+        import sentry_sdk
+        with sentry_sdk.start_span(op="llm.chat", name=f"LLM chat ({self.model})") as span:
+            span.set_data("model", self.model)
+            span.set_data("temperature", temperature)
+            span.set_data("max_tokens", max_tokens)
+
+            kwargs = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+
+            if response_format:
+                kwargs["response_format"] = response_format
+
+            response = self.client.chat.completions.create(**kwargs)
+            content = response.choices[0].message.content
+            # 部分模型（如MiniMax M2.5）会在content中包含<think>思考内容，需要移除
+            content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
+
+            usage = getattr(response, "usage", None)
+            if usage:
+                span.set_data("prompt_tokens", getattr(usage, "prompt_tokens", None))
+                span.set_data("completion_tokens", getattr(usage, "completion_tokens", None))
+
+            return content
     
     def chat_json(
         self,
