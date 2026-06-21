@@ -29,7 +29,7 @@ The frontend proxies all `/api` requests to the backend (configured in `frontend
 Create a `.env` file in the **repo root** (`snorkel/.env`). The backend loads it from there automatically.
 
 ```bash
-cp MiroFish/.env.example .env
+cp .env.example .env
 ```
 
 Then fill in the required values:
@@ -76,10 +76,9 @@ REPORT_AGENT_TEMPERATURE=0.5
 
 ### 1. Start Redis + Agent Memory Server (optional)
 
-If you want agent memory, run only the Redis/AMS services from the `MiroFish/` Docker Compose file. Use `--scale` to avoid starting the upstream MiroFish app container:
+If you want agent memory, start the Redis/AMS services:
 
 ```bash
-cd MiroFish
 docker compose up -d redis memory-api memory-worker
 ```
 
@@ -88,58 +87,43 @@ This starts:
 - **AMS API** on port `8000`
 - **AMS task worker** (background job processor)
 
-> **Note:** `docker compose up -d` (without specifying services) will also start the upstream `mirofish` container — that's the original MiroFish app, not this project. Only bring up the three services above.
-
 To stop: `docker compose down`
 
-### 2. Start the Backend
+### 2. Install dependencies
 
 ```bash
-cd backend
-pip install -r requirements.txt   # or: uv sync
-python run.py
+npm run setup:all
 ```
 
-The backend starts on `http://localhost:5001`. You should see:
-```
-MiroFish Backend 启动完成
-```
+This installs root npm packages, frontend npm packages, and backend Python packages.
 
-Health check: `curl http://localhost:5001/health`
-
-### 3. Start the Frontend
-
-In a separate terminal:
+### 3. Start both services
 
 ```bash
-cd frontend
-npm install
 npm run dev
 ```
 
-The frontend starts on `http://localhost:3000` and automatically proxies API calls to the backend.
+This runs the backend and frontend concurrently. The backend starts on `http://localhost:5001` and the frontend on `http://localhost:3000`.
 
----
-
-## Running Both with One Command
-
-You can use a tool like [concurrently](https://github.com/open-cli-tools/concurrently) or just run them in separate terminals. There's no shared process manager set up yet.
-
-```bash
-# Terminal 1
-cd backend && python run.py
-
-# Terminal 2
-cd frontend && npm run dev
-```
+Health check: `curl http://localhost:5001/health`
 
 ---
 
 ## Deployment
 
-There is no snorkel-specific Docker image yet. Deploy the backend and frontend manually.
+### Docker
 
-> The `MiroFish/docker-compose.yml` also defines a `mirofish` service (the upstream MiroFish app) — ignore that for snorkel deployments. Only use the `redis`, `memory-api`, and `memory-worker` services from it if you need AMS.
+Build and run the full stack with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+Or build just the Snorkel image:
+
+```bash
+docker compose build snorkel
+```
 
 ### Manual Deployment
 
@@ -180,6 +164,10 @@ VITE_API_BASE_URL=https://your-backend.example.com
 ```
 snorkel/
 ├── .env                    # your environment variables (create this)
+├── .env.example            # environment variable template
+├── package.json            # root npm scripts (dev, build, setup)
+├── Dockerfile              # multi-stage build for frontend + backend
+├── docker-compose.yml      # Redis + AMS + Snorkel services
 ├── backend/                # Flask API server
 │   ├── app/
 │   │   ├── api/            # route handlers (simulation, report)
@@ -195,9 +183,6 @@ snorkel/
 │   │   └── main.js
 │   ├── vite.config.js      # proxies /api → localhost:5001
 │   └── package.json        # entry point → http://localhost:3000
-├── MiroFish/               # upstream MiroFish engine (reference + Docker Compose)
-│   ├── docker-compose.yml  # Redis + AMS + MiroFish container
-│   └── .env.example        # env variable reference
 └── planning/               # design docs and wireframes
 ```
 
