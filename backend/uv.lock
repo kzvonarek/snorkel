@@ -7,6 +7,20 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "agent-memory-client"
+version = "0.14.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "python-ulid" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/63/c0/ccabb355a5566886936e8d81b6184475e22030821411251297b99848c6e0/agent_memory_client-0.14.0.tar.gz", hash = "sha256:7178a38682ec61538002adec34140c7751387b82fbab8c214edf766b6d913d85", size = 211719, upload-time = "2026-02-06T18:49:50.704Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/34/83/2ffe0e3baab57decde2b4613b63a59712bab76fcad21d3b00769bc04a43d/agent_memory_client-0.14.0-py3-none-any.whl", hash = "sha256:1e8cafc1c506c5712a65afea4faa5da5f42920d6c2a59ad59580cea97540f4ae", size = 46032, upload-time = "2026-02-06T18:49:49.013Z" },
+]
+
+[[package]]
 name = "aiofiles"
 version = "25.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -988,6 +1002,7 @@ name = "mirofish-backend"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "agent-memory-client" },
     { name = "camel-ai" },
     { name = "camel-oasis" },
     { name = "chardet" },
@@ -998,7 +1013,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "pymupdf" },
     { name = "python-dotenv" },
-    { name = "zep-cloud" },
 ]
 
 [package.optional-dependencies]
@@ -1016,6 +1030,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "agent-memory-client", specifier = ">=0.14.0" },
     { name = "camel-ai", specifier = "==0.2.78" },
     { name = "camel-oasis", specifier = "==0.2.5" },
     { name = "chardet", specifier = ">=5.0.0" },
@@ -1029,7 +1044,6 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.23.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "zep-cloud", specifier = "==3.13.0" },
 ]
 provides-extras = ["dev"]
 
@@ -1831,6 +1845,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/78/96/804520d0850c7db98e5ccb70282e29208723f0964e88ffd9d0da2f52ea09/python_multipart-0.0.21.tar.gz", hash = "sha256:7137ebd4d3bbf70ea1622998f902b97a29434a9e8dc40eb203bbcf7c2a2cba92", size = 37196, upload-time = "2025-12-17T09:24:22.446Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/aa/76/03af049af4dcee5d27442f71b6924f01f3efb5d2bd34f23fcd563f2cc5f5/python_multipart-0.0.21-py3-none-any.whl", hash = "sha256:cf7a6713e01c87aa35387f4774e812c4361150938d20d232800f75ffcf266090", size = 24541, upload-time = "2025-12-17T09:24:21.153Z" },
+]
+
+[[package]]
+name = "python-ulid"
+version = "3.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/7e/0d6c82b5ccc71e7c833aed43d9e8468e1f2ff0be1b3f657a6fcafbb8433d/python_ulid-3.1.0.tar.gz", hash = "sha256:ff0410a598bc5f6b01b602851a3296ede6f91389f913a5d5f8c496003836f636", size = 93175, upload-time = "2025-08-18T16:09:26.305Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6c/a0/4ed6632b70a52de845df056654162acdebaf97c20e3212c559ac43e7216e/python_ulid-3.1.0-py3-none-any.whl", hash = "sha256:e2cdc979c8c877029b4b7a38a6fba3bc4578e4f109a308419ff4d3ccf0a46619", size = 11577, upload-time = "2025-08-18T16:09:25.047Z" },
 ]
 
 [[package]]
@@ -2770,20 +2793,4 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d4/c8/cc640404a0981e6c14e2044fc64e43b4c1ddf69e7dddc8f2a02638ba5ae8/yarg-0.1.9.tar.gz", hash = "sha256:55695bf4d1e3e7f756496c36a69ba32c40d18f821e38f61d028f6049e5e15911", size = 11988, upload-time = "2014-08-11T22:01:37.243Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8b/90/89a2ff242ccab6a24fbab18dbbabc67c51a6f0ed01f9a0f41689dc177419/yarg-0.1.9-py2.py3-none-any.whl", hash = "sha256:4f9cebdc00fac946c9bf2783d634e538a71c7d280a4d806d45fd4dc0ef441492", size = 19162, upload-time = "2014-08-11T22:01:41.104Z" },
-]
-
-[[package]]
-name = "zep-cloud"
-version = "3.13.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx" },
-    { name = "pydantic" },
-    { name = "pydantic-core" },
-    { name = "python-dateutil" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/32/c7/c835debf13302f8aaf8d0561ac6ff5a9bc15cc140cd692a1330fb1900c55/zep_cloud-3.13.0.tar.gz", hash = "sha256:c55d9c511773bb2177ae8e08546141404f87d2099affafabd7ec4b4505763e48", size = 63116, upload-time = "2025-11-20T15:25:40.745Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f7/e1/bbf03c6c8007c0cb238780e7fc6d8e1a52633893933a41aa09678618985a/zep_cloud-3.13.0-py3-none-any.whl", hash = "sha256:b2fbdeef73e262194c8f67b58f76471de6ee87e1a629541a09d8f7bbf475f12b", size = 110601, upload-time = "2025-11-20T15:25:38.484Z" },
 ]
