@@ -1,5 +1,7 @@
 <template>
   <div class="personas">
+    <div v-if="topic" class="study-banner"><span :style="{ background: topic.color }"></span><div><strong>{{ topic.name }}</strong><small>Personas derived for this study</small></div></div>
+    <div v-if="!personas.length" class="empty-state"><strong>No personas added yet</strong><span>Add customer segments or connect data sources to build this study.</span><BaseButton variant="secondary">Add persona</BaseButton></div>
     <div
       v-for="p in personas"
       :key="p.id"
@@ -51,13 +53,17 @@ import { reactive } from 'vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { personas as raw } from '@/data/personas.js'
+import run from '@/composables/useRun'
+import { getDemoTopic } from '@/data/demoTopics'
+import { getStudyInputs } from '@/data/studyInputs'
 
-const personas = reactive(JSON.parse(JSON.stringify(raw)))
+const topic = run.topicId ? getDemoTopic(run.topicId) : null
+const personas = reactive(JSON.parse(JSON.stringify(topic ? getStudyInputs(topic.id).personas : [])))
 </script>
 
 <style scoped>
 .personas { display: flex; flex-direction: column; gap: 10px; }
+.study-banner { display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:4px; }.study-banner>span { width:10px;height:32px;border-radius:5px; }.study-banner div { display:flex;flex-direction:column; }.study-banner small { color:var(--text-3); }.empty-state { padding:48px;border:1px dashed var(--border-2);border-radius:12px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text-3); }.empty-state strong { color:var(--ink); }
 
 .persona-row {
   background: var(--surface);

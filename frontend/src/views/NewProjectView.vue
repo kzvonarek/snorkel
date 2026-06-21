@@ -50,8 +50,10 @@
 import { reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import { resetRun } from '@/composables/useRun'
 
 const router = useRouter()
+resetRun()
 const draft = reactive({ name: '', concept: '', audience: '', question: '', context: '' })
 
 function continueSetup() {
