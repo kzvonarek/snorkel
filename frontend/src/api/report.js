@@ -19,3 +19,11 @@ export const generateReport = (data) => {
 export const chatWithReport = (data) => {
   return requestWithRetry(() => service.post('/api/report/chat', data), 3, 1000)
 }
+
+export const getReportBySimulation = (simulationId) => service.get(`/api/report/by-simulation/${simulationId}`)
+export const getReportStatus = (data) => service.post('/api/report/generate/status', data)
+
+export const reportDownloadUrl = (reportId) => {
+  const base = import.meta.env.VITE_API_BASE_URL || ''
+  return `${base}/api/report/${reportId}/download`
+}

@@ -7,17 +7,19 @@ _thread_local = threading.local()
 
 _locales_dir = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'locales')
 
-# Load language registry
-with open(os.path.join(_locales_dir, 'languages.json'), 'r', encoding='utf-8') as f:
-    _languages = json.load(f)
-
-# Load translation files
+# Localization assets are optional in the repurposed Snorkel distribution.
+_languages = {}
 _translations = {}
-for filename in os.listdir(_locales_dir):
-    if filename.endswith('.json') and filename != 'languages.json':
-        locale_name = filename[:-5]
-        with open(os.path.join(_locales_dir, filename), 'r', encoding='utf-8') as f:
-            _translations[locale_name] = json.load(f)
+if os.path.isdir(_locales_dir):
+    languages_path = os.path.join(_locales_dir, 'languages.json')
+    if os.path.exists(languages_path):
+        with open(languages_path, 'r', encoding='utf-8') as f:
+            _languages = json.load(f)
+    for filename in os.listdir(_locales_dir):
+        if filename.endswith('.json') and filename != 'languages.json':
+            locale_name = filename[:-5]
+            with open(os.path.join(_locales_dir, filename), 'r', encoding='utf-8') as f:
+                _translations[locale_name] = json.load(f)
 
 
 def set_locale(locale: str):
@@ -27,9 +29,9 @@ def set_locale(locale: str):
 
 def get_locale() -> str:
     if has_request_context():
-        raw = request.headers.get('Accept-Language', 'zh')
-        return raw if raw in _translations else 'zh'
-    return getattr(_thread_local, 'locale', 'zh')
+        raw = request.headers.get('Accept-Language', 'en').split(',')[0].split('-')[0]
+        return raw if raw in _translations else ('en' if 'en' in _translations else 'zh')
+    return getattr(_thread_local, 'locale', 'en' if 'en' in _translations else 'zh')
 
 
 def t(key: str, **kwargs) -> str:
