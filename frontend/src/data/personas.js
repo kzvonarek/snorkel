@@ -1,0 +1,47 @@
+export const personas = [
+  {
+    id: 'persona-1',
+    name: 'Power Users',
+    color: '#4B5FA8',
+    size: '~12%',
+    confidence: 'high',
+    traits: ['High frequency', 'API-first', 'Automation-oriented'],
+    quote: '"I need the export to respect my custom field mapping — I rebuild it every week and it costs me 20 min."',
+    sources: [
+      { label: 'Mixpanel events', pct: 82 },
+      { label: 'Intercom tickets', pct: 64 },
+      { label: 'Gong calls', pct: 41 },
+    ],
+    expanded: false,
+  },
+  {
+    id: 'persona-2',
+    name: 'Casual Explorers',
+    color: '#6B8E4E',
+    size: '~34%',
+    confidence: 'med',
+    traits: ['Low frequency', 'GUI-preferred', 'Price-sensitive'],
+    quote: '"I just want to see my spending categories at a glance — I don\'t need all these settings."',
+    sources: [
+      { label: 'Mixpanel events', pct: 55 },
+      { label: 'Intercom tickets', pct: 78 },
+      { label: 'Manual entries', pct: 22 },
+    ],
+    expanded: false,
+  },
+  {
+    id: 'persona-3',
+    name: 'Finance Professionals',
+    color: '#8E6B4E',
+    size: '~18%',
+    confidence: 'high',
+    traits: ['Mid frequency', 'Export-heavy', 'Compliance-aware'],
+    quote: '"Audit trails matter. I need to know who changed what and when — every time."',
+    sources: [
+      { label: 'Intercom tickets', pct: 91 },
+      { label: 'Gong calls', pct: 68 },
+      { label: 'Zendesk', pct: 50 },
+    ],
+    expanded: false,
+  },
+]
