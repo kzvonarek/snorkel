@@ -21,7 +21,7 @@ from openai import OpenAI
 from ..config import Config
 from ..utils.logger import get_logger
 from ..utils.locale import get_language_instruction, t
-from .zep_entity_reader import EntityNode, ZepEntityReader
+from .persona import PersonaInput
 
 logger = get_logger('mirofish.simulation_config')
 
@@ -247,7 +247,7 @@ class SimulationConfigGenerator:
         graph_id: str,
         simulation_requirement: str,
         document_text: str,
-        entities: List[EntityNode],
+        entities: List[PersonaInput],
         enable_twitter: bool = True,
         enable_reddit: bool = True,
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
@@ -382,7 +382,7 @@ class SimulationConfigGenerator:
         self,
         simulation_requirement: str,
         document_text: str,
-        entities: List[EntityNode]
+        entities: List[PersonaInput]
     ) -> str:
         """构建LLM上下文，截断到最大长度"""
         
@@ -406,12 +406,12 @@ class SimulationConfigGenerator:
         
         return "\n".join(context_parts)
     
-    def _summarize_entities(self, entities: List[EntityNode]) -> str:
+    def _summarize_entities(self, entities: List[PersonaInput]) -> str:
         """生成实体摘要"""
         lines = []
         
         # 按类型分组
-        by_type: Dict[str, List[EntityNode]] = {}
+        by_type: Dict[str, List[PersonaInput]] = {}
         for e in entities:
             t = e.get_entity_type() or "Unknown"
             if t not in by_type:
@@ -647,7 +647,7 @@ class SimulationConfigGenerator:
         self, 
         context: str, 
         simulation_requirement: str,
-        entities: List[EntityNode]
+        entities: List[PersonaInput]
     ) -> Dict[str, Any]:
         """生成事件配置"""
         
@@ -813,7 +813,7 @@ class SimulationConfigGenerator:
     def _generate_agent_configs_batch(
         self,
         context: str,
-        entities: List[EntityNode],
+        entities: List[PersonaInput],
         start_idx: int,
         simulation_requirement: str
     ) -> List[AgentActivityConfig]:
@@ -905,7 +905,7 @@ class SimulationConfigGenerator:
         
         return configs
     
-    def _generate_agent_config_by_rule(self, entity: EntityNode) -> Dict[str, Any]:
+    def _generate_agent_config_by_rule(self, entity: PersonaInput) -> Dict[str, Any]:
         """基于规则生成单个Agent配置（中国人作息）"""
         entity_type = (entity.get_entity_type() or "Unknown").lower()
         

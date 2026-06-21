@@ -32,8 +32,13 @@ class Config:
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
     LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'gpt-4o-mini')
     
-    # Zep配置
-    ZEP_API_KEY = os.environ.get('ZEP_API_KEY')
+    # Redis Agent Memory Server configuration
+    AMS_ENABLED = os.environ.get('AMS_ENABLED', 'true').lower() == 'true'
+    AMS_BASE_URL = os.environ.get('AMS_BASE_URL', 'http://localhost:8000')
+    AMS_API_KEY = os.environ.get('AMS_API_KEY')
+    AMS_TIMEOUT = float(os.environ.get('AMS_TIMEOUT', '30'))
+    AMS_GENERATION_MODEL = os.environ.get('AMS_GENERATION_MODEL', 'gpt-4o-mini')
+    AMS_EMBEDDING_MODEL = os.environ.get('AMS_EMBEDDING_MODEL', 'text-embedding-3-small')
     
     # 文件上传配置
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
@@ -69,7 +74,5 @@ class Config:
         errors: list[str] = []
         if not cls.LLM_API_KEY:
             errors.append("LLM_API_KEY 未配置")
-        if not cls.ZEP_API_KEY:
-            errors.append("ZEP_API_KEY 未配置")
         return errors
 

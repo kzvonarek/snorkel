@@ -92,12 +92,7 @@ def generate_report():
                 "error": t('api.projectNotFound', id=state.project_id)
             }), 404
         
-        graph_id = state.graph_id or project.graph_id
-        if not graph_id:
-            return jsonify({
-                "success": False,
-                "error": t('api.missingGraphIdEnsure')
-            }), 400
+        graph_id = simulation_id
         
         simulation_requirement = project.simulation_requirement
         if not simulation_requirement:
@@ -532,12 +527,7 @@ def chat_with_report_agent():
                 "error": t('api.projectNotFound', id=state.project_id)
             }), 404
         
-        graph_id = state.graph_id or project.graph_id
-        if not graph_id:
-            return jsonify({
-                "success": False,
-                "error": t('api.missingGraphId')
-            }), 400
+        graph_id = simulation_id
         
         simulation_requirement = project.simulation_requirement or ""
         
@@ -957,9 +947,9 @@ def search_graph_tool():
                 "error": t('api.requireGraphIdAndQuery')
             }), 400
         
-        from ..services.zep_tools import ZepToolsService
+        from ..services.memory_tools import MemoryToolsService
         
-        tools = ZepToolsService()
+        tools = MemoryToolsService()
         result = tools.search_graph(
             graph_id=graph_id,
             query=query,
@@ -1001,9 +991,9 @@ def get_graph_statistics_tool():
                 "error": t('api.requireGraphId')
             }), 400
         
-        from ..services.zep_tools import ZepToolsService
+        from ..services.memory_tools import MemoryToolsService
         
-        tools = ZepToolsService()
+        tools = MemoryToolsService()
         result = tools.get_graph_statistics(graph_id)
         
         return jsonify({
