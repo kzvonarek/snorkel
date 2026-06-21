@@ -10,7 +10,12 @@ import warnings
 warnings.filterwarnings("ignore", message=".*resource_tracker.*")
 
 from flask import Flask, request
-from flask_cors import CORS
+
+try:
+    from flask_cors import CORS
+except ModuleNotFoundError:  # pragma: no cover - optional dependency fallback
+    def CORS(*args, **kwargs):
+        return None
 
 from .config import Config
 from .utils.logger import setup_logger, get_logger
