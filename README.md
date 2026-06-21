@@ -76,17 +76,19 @@ REPORT_AGENT_TEMPERATURE=0.5
 
 ### 1. Start Redis + Agent Memory Server (optional)
 
-If you want agent memory, run the Docker Compose stack from the `MiroFish/` directory:
+If you want agent memory, run only the Redis/AMS services from the `MiroFish/` Docker Compose file. Use `--scale` to avoid starting the upstream MiroFish app container:
 
 ```bash
 cd MiroFish
-docker compose up -d
+docker compose up -d redis memory-api memory-worker
 ```
 
 This starts:
 - **Redis** on port `6379`
 - **AMS API** on port `8000`
 - **AMS task worker** (background job processor)
+
+> **Note:** `docker compose up -d` (without specifying services) will also start the upstream `mirofish` container — that's the original MiroFish app, not this project. Only bring up the three services above.
 
 To stop: `docker compose down`
 
@@ -135,23 +137,9 @@ cd frontend && npm run dev
 
 ## Deployment
 
-### Docker (via MiroFish image)
+There is no snorkel-specific Docker image yet. Deploy the backend and frontend manually.
 
-The upstream MiroFish Docker image bundles both frontend and backend. If you want to deploy using it:
-
-```bash
-cd MiroFish
-# Edit docker-compose.yml to point to your image or build locally
-docker compose up -d
-```
-
-The `mirofish` service in `docker-compose.yml` exposes ports `3000` (frontend) and `5001` (backend).
-
-Mount your uploads directory for persistence:
-```yaml
-volumes:
-  - ./backend/uploads:/app/backend/uploads
-```
+> The `MiroFish/docker-compose.yml` also defines a `mirofish` service (the upstream MiroFish app) — ignore that for snorkel deployments. Only use the `redis`, `memory-api`, and `memory-worker` services from it if you need AMS.
 
 ### Manual Deployment
 
