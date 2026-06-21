@@ -1,0 +1,40 @@
+:root {
+  /* Brand */
+  --accent: #4B5FA8;
+  --accent-hover: #3d5096;
+  --accent-light: #EEF0F9;
+
+  /* Surface */
+  --ink: #1A1F30;
+  --bg: #F5F6FA;
+  --surface: #FFFFFF;
+  --sidebar-bg: #ECEEF4;
+
+  /* Text */
+  --text-2: #505C78;
+  --text-3: #7882A0;
+
+  /* Borders */
+  --border: #E2E6F0;
+  --border-2: #D0D5E6;
+
+  /* Semantic — confidence/sentiment */
+  --success-fg: #3B7355;
+  --success-bg: #DEF0E7;
+  --warn-fg: #B07F33;
+  --warn-bg: #F3E7CC;
+  --neg-fg: #AB5238;
+  --neg-bg: #F2DBD2;
+
+  /* Shell metrics */
+  --sidebar-w: 236px;
+  --topbar-h: 56px;
+  --content-px: 32px;
+  --content-py: 28px;
+  --radius-card: 12px;
+  --radius-pill: 20px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(26,31,48,0.06), 0 1px 2px rgba(26,31,48,0.04);
+  --shadow-md: 0 4px 12px rgba(26,31,48,0.10);
+}
