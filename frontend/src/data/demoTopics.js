@@ -59,35 +59,6 @@ export const demoTopics = [
     objections: ['Seasonal progress may punish time-limited players','Solo and no-voice matchmaking need first-class support','Resource grind could overwhelm the social differentiation'],
     recommendation: 'Ship a public co-op demo centered on one seasonal transformation. Measure group return intent while testing catch-up, solo companions, and reduced midgame resource chores.',
   },
-  {
-    id: 'harbor-commons', category: 'New apartment community', name: 'Harbor Commons',
-    tagline: 'A transit-oriented apartment community with flexible units, shared workspaces, and family services.',
-    question: 'Which amenities and lease design create enough value to support premium rents?',
-    color: '#3B7355', glyph: 'HC', duration: 16000, rounds: 5,
-    pdfUrl: '/reports/harbor-commons-pmf-report.pdf',
-    agents: [
-      makeAgent('hc-1','Ana Torres','Young professional','#4F9A73',16,24), makeAgent('hc-2','Ben Wu','Remote worker','#3B7355',23,50), makeAgent('hc-3','Keisha Ford','Graduate student','#69AC86',17,75),
-      makeAgent('hc-4','Omar Aziz','Parent of two','#4B5FA8',49,21), makeAgent('hc-5','Rachel Stein','Downsizer','#6879BC',55,49), makeAgent('hc-6','Darius Cole','Healthcare worker','#344A91',47,76),
-      makeAgent('hc-7','Mei Lin','Budget renter','#B07F33',80,24), makeAgent('hc-8','Jon Bell','Pet owner','#CB9650',76,51), makeAgent('hc-9','Sofia Reyes','Local business owner','#96671E',83,75),
-    ],
-    thoughts: [
-      ['hc-1','Train access plus secure bike storage would let me drop a car payment. That changes the rent math.','positive'],
-      ['hc-7','Bundled amenity fees worry me. I need a lower base rent and the option to add services.','concern'],
-      ['hc-2','Bookable quiet rooms are more useful than a beautiful open coworking lounge.','positive'],
-      ['hc-4','After-school space matters, but the two-bedroom floor plan needs real storage and sound separation.','concern'],
-      ['hc-8','A wash station is nice; transparent pet rent and nearby green space are what decide the lease.','neutral'],
-      ['hc-6','My shifts end after midnight. Lighting, access control, and late transit safety are non-negotiable.','concern'],
-      ['hc-5','Concierge help and guest suites could make downsizing practical without paying for unused bedrooms.','positive'],
-      ['hc-9','Ground-floor local retail makes the place feel like a neighborhood instead of a sealed complex.','positive'],
-      ['hc-3','Micro-units work if kitchens are real and leases flex around academic schedules.','neutral'],
-      ['hc-7','Publish the complete monthly cost before I tour. Surprise parking or package fees destroy trust.','concern'],
-      ['hc-1','I would join a priority list at a modest premium if transit timing and total fees are guaranteed.','positive'],
-      ['hc-4','The concept fits families only if childcare partnerships are dependable, not launch-day marketing.','neutral'],
-    ],
-    metrics: { fit: 73, positive: 5, concerns: 4, pilot: 6 },
-    objections: ['Total monthly cost and mandatory amenity fees','Family storage, acoustics, and dependable childcare','Late-night transit safety and building access controls'],
-    recommendation: 'Test demand with transparent all-in pricing and three amenity bundles. Prioritize quiet work rooms, mobility infrastructure, safety, and functional family layouts over showcase amenities.',
-  },
 ]
 
 export const getDemoTopic = id => demoTopics.find(topic => topic.id === id) || demoTopics[0]

@@ -57,7 +57,11 @@ let liveTimer
 
 const topic = computed(() => run.mode === 'demo' ? getDemoTopic(run.topicId) : null)
 const fallbackAgents = computed(() => run.agentStats.map((agent,index) => ({ id: agent.agent_id, name: agent.agent_name || `Agent ${index + 1}`, segment: agent.segment || 'Persona', color: ['#4B5FA8','#3B7355','#8E6B4E'][index % 3], x: 15 + (index % 3) * 34, y: 22 + Math.floor(index / 3) * 27 })))
-const visibleAgents = computed(() => topic.value?.agents || fallbackAgents.value)
+const visibleAgents = computed(() => {
+  if (!topic.value) return fallbackAgents.value
+  const agentIds = run.configuration?.agentIds
+  return agentIds?.length ? topic.value.agents.filter(agent => agentIds.includes(agent.id)) : topic.value.agents
+})
 const activeThought = computed(() => [...run.actions].reverse().find(action => action.agent_id === (selectedAgent.value || latestAgent.value)))
 const activeAgent = computed(() => agentFor(selectedAgent.value || latestAgent.value))
 const popoverStyle = computed(() => ({ left: `${Math.min(72, Math.max(8, (activeAgent.value?.x || 50) - 8))}%`, top: `${Math.min(68, (activeAgent.value?.y || 50) + 10)}%` }))
@@ -69,10 +73,12 @@ function moveAgents() { visibleAgents.value.forEach(agent => { offsets[agent.id]
 function scheduleThought() {
   if (!topic.value || !run.isRunning) return
   const index = run.actions.length
-  if (index >= topic.value.thoughts.length) { completeDemoTopic(topic.value); return }
+  const allowedAgentIds = run.configuration?.agentIds
+  const thoughtSequence = topic.value.thoughts.map((thought, originalIndex) => ({ thought, originalIndex })).filter(item => !allowedAgentIds?.length || allowedAgentIds.includes(item.thought[0]))
+  if (index >= thoughtSequence.length) { completeDemoTopic(topic.value); return }
   thoughtTimer = setTimeout(async () => {
-    latestAgent.value = topic.value.thoughts[index][0]
-    appendDemoThought(topic.value, index)
+    latestAgent.value = thoughtSequence[index].thought[0]
+    appendDemoThought(topic.value, thoughtSequence[index].originalIndex)
     await nextTick(); if (feedEl.value) feedEl.value.scrollTop = 0
     scheduleThought()
   }, index === 0 ? 900 : 1200)
@@ -80,15 +86,18 @@ function scheduleThought() {
 function finishNow() {
   if (!topic.value) return
   clearTimeout(thoughtTimer)
-  for (let index = run.actions.length; index < topic.value.thoughts.length; index += 1) appendDemoThought(topic.value, index)
-  latestAgent.value = topic.value.thoughts.at(-1)[0]
+  const allowedAgentIds = run.configuration?.agentIds
+  const thoughtSequence = topic.value.thoughts.map((thought, originalIndex) => ({ thought, originalIndex })).filter(item => !allowedAgentIds?.length || allowedAgentIds.includes(item.thought[0]))
+  for (let index = run.actions.length; index < thoughtSequence.length; index += 1) appendDemoThought(topic.value, thoughtSequence[index].originalIndex)
+  latestAgent.value = thoughtSequence.at(-1).thought[0]
   completeDemoTopic(topic.value)
 }
 function restart() {
   if (!topic.value) return
   clearTimeout(thoughtTimer)
   const topicId = topic.value.id
-  launchDemoTopic(topicId)
+  const configuration = run.configuration || {}
+  launchDemoTopic(topicId, configuration)
   scheduleThought()
 }
 async function pollLive() { try { await refreshRun() } catch {} if (run.isRunning && run.mode === 'live') liveTimer = setTimeout(pollLive, 1500) }

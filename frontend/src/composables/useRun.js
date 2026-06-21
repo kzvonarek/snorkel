@@ -12,12 +12,14 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 const unwrap = response => response?.data ?? response
 
 function initialState() {
-  return { mode: 'live', fixtureReason: '', projectId: '', simulationId: '', reportId: '', topicId: '', phase: 'idle', isRunning: false, currentRound: 0, totalRounds: 0, progress: 0, actions: [], timeline: [], agentStats: [], posts: [], report: null, error: '', updatedAt: '' }
+  return { mode: 'live', configuredMode: 'social', configuration: null, fixtureReason: '', projectId: '', simulationId: '', reportId: '', topicId: '', phase: 'idle', isRunning: false, currentRound: 0, totalRounds: 0, progress: 0, actions: [], timeline: [], agentStats: [], posts: [], report: null, error: '', updatedAt: '' }
 }
 
 function restore() {
   if (typeof sessionStorage === 'undefined') return initialState()
-  return { ...initialState(), ...readStoredRun(sessionStorage) }
+  const restored = { ...initialState(), ...readStoredRun(sessionStorage) }
+  if (restored.mode === 'demo' && restored.topicId && getDemoTopic(restored.topicId).id !== restored.topicId) return initialState()
+  return restored
 }
 
 const state = reactive(restore())
@@ -30,13 +32,15 @@ function assign(values) { Object.assign(state, values); persist() }
 export function activateFixture(reason) { assign(createFixtureSnapshot(reason)); return state }
 export function resetRun() { Object.assign(state, initialState()); persist() }
 
-export function launchDemoTopic(topicId) {
+export function launchDemoTopic(topicId, configuration = {}) {
   const topic = getDemoTopic(topicId)
+  const agents = configuration.agentIds?.length ? topic.agents.filter(agent => configuration.agentIds.includes(agent.id)) : topic.agents
   resetRun()
   assign({
     mode: 'demo', topicId: topic.id, projectId: `demo_${topic.id}`, simulationId: `sim_${topic.id}`,
+    configuration,
     phase: 'running', isRunning: true, currentRound: 0, totalRounds: topic.rounds, progress: 0,
-    agentStats: topic.agents.map(agent => ({ agent_id: agent.id, agent_name: agent.name, segment: agent.segment, total_actions: 0, action_types: {} })),
+    agentStats: agents.map(agent => ({ agent_id: agent.id, agent_name: agent.name, segment: agent.segment, total_actions: 0, action_types: {} })),
   })
   return state
 }
@@ -44,10 +48,14 @@ export function launchDemoTopic(topicId) {
 export function appendDemoThought(topic, thoughtIndex) {
   const [agentId, content, sentiment] = topic.thoughts[thoughtIndex]
   const agent = topic.agents.find(item => item.id === agentId)
-  const action = { round_num: Math.min(topic.rounds, Math.floor(thoughtIndex / 3) + 1), timestamp: new Date().toISOString(), platform: 'demo', agent_id: agentId, agent_name: agent.name, segment: agent.segment, sentiment, action_type: 'THINK', action_args: { content }, success: true }
+  const allowedAgentIds = state.configuration?.agentIds
+  const configuredThoughts = allowedAgentIds?.length ? topic.thoughts.filter(thought => allowedAgentIds.includes(thought[0])) : topic.thoughts
+  const configuredIndex = allowedAgentIds?.length ? configuredThoughts.indexOf(topic.thoughts[thoughtIndex]) : thoughtIndex
+  const roundNum = allowedAgentIds?.length ? Math.min(topic.rounds, Math.floor(configuredIndex * topic.rounds / configuredThoughts.length) + 1) : Math.min(topic.rounds, Math.floor(thoughtIndex / 3) + 1)
+  const action = { round_num: roundNum, timestamp: new Date().toISOString(), platform: 'demo', agent_id: agentId, agent_name: agent.name, segment: agent.segment, sentiment, action_type: 'THINK', action_args: { content }, success: true }
   const actions = [...state.actions, action]
   const agentStats = state.agentStats.map(item => item.agent_id === agentId ? { ...item, total_actions: item.total_actions + 1, action_types: { ...item.action_types, THINK: (item.action_types.THINK || 0) + 1 } } : item)
-  assign({ actions, agentStats, currentRound: action.round_num, progress: Math.round(actions.length / topic.thoughts.length * 100) })
+  assign({ actions, agentStats, currentRound: action.round_num, progress: Math.round(actions.length / configuredThoughts.length * 100) })
 }
 
 export function completeDemoTopic(topic) {
@@ -66,18 +74,23 @@ async function pollPreparation(taskId, simulationId) {
   throw new Error('Simulation preparation timed out')
 }
 
-export async function launchRun({ product, environments = [], personas, rounds, agentsPerSegment }) {
+export async function launchRun({ product, environments = [], personas, rounds, agentsPerSegment, runMode = 'social' }) {
   resetRun()
   const context = [product.name, ...environments.map(item => `${item.name}: ${item.notes}`)].join('\n')
+  const platform = runMode === 'interview' ? 'parallel' : 'twitter'
   try {
-    assign({ phase: 'creating', isRunning: true, totalRounds: rounds })
+    assign({ phase: 'creating', isRunning: true, totalRounds: rounds, configuredMode: runMode })
     const project = unwrap(await createProject({ name: product.name, simulation_requirement: `Evaluate product-market fit for ${product.name}. Identify strengths, friction, objections, and adoption requirements.`, document_text: context }))
     assign({ projectId: project.project_id })
-    const simulation = unwrap(await createSimulation({ project_id: project.project_id, enable_twitter: true, enable_reddit: false }))
+    const simulation = unwrap(await createSimulation({
+      project_id: project.project_id,
+      enable_twitter: true,
+      enable_reddit: runMode === 'interview',
+    }))
     assign({ simulationId: simulation.simulation_id, phase: 'preparing' })
     const preparation = unwrap(await prepareSimulation({ simulation_id: simulation.simulation_id, personas: expandPersonas(personas, agentsPerSegment), use_llm_for_profiles: false }))
     await pollPreparation(preparation.task_id, simulation.simulation_id)
-    await startSimulation({ simulation_id: simulation.simulation_id, platform: 'twitter', max_rounds: rounds, enable_memory_indexing: false })
+    await startSimulation({ simulation_id: simulation.simulation_id, platform, max_rounds: rounds, enable_memory_indexing: false })
     assign({ phase: 'running', progress: 0 })
     return state
   } catch (error) {

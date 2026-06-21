@@ -4,7 +4,7 @@
       <span class="banner-icon">◎</span>
       <div>
         <div class="banner-title">Data fidelity: <strong>High</strong></div>
-        <div class="banner-sub">2 sources connected · 88% average persona match</div>
+        <div class="banner-sub">3 sources connected · 91% average persona match</div>
       </div>
     </div>
 

@@ -1,10 +1,5 @@
 <template>
   <div class="overview">
-    <div class="connection-banner" :class="backendState">
-      <span>Backend</span>
-      <strong>{{ backendLabel }}</strong>
-    </div>
-
     <div class="overview-section">
       <h2 class="section-heading">Build &amp; simulate</h2>
       <div class="tile-grid">
@@ -40,26 +35,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
 import Thumbnail from "@/components/ui/Thumbnail.vue";
-import { getBackendHealth } from "@/api/health";
-
-const backendState = ref("loading");
-
-const backendLabel = computed(() => {
-  if (backendState.value === "connected") return "Connected";
-  if (backendState.value === "offline") return "Offline";
-  return "Checking connection...";
-});
-
-onMounted(async () => {
-  try {
-    const health = await getBackendHealth();
-    backendState.value = health?.status === "ok" ? "connected" : "offline";
-  } catch {
-    backendState.value = "offline";
-  }
-});
 
 const buildTiles = [
   {
@@ -136,27 +112,6 @@ const outputTiles = [
   display: flex;
   flex-direction: column;
   gap: 36px;
-}
-
-.connection-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  font-size: 13px;
-  color: var(--text-2);
-}
-
-.connection-banner.connected strong {
-  color: var(--success-fg);
-}
-
-.connection-banner.offline strong {
-  color: var(--danger-fg, #b42318);
 }
 
 .section-heading {

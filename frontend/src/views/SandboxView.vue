@@ -39,7 +39,7 @@
     <div class="run-settings">
       <div class="settings-heading">Run settings</div>
       <Slider v-model="rounds" label="Simulation rounds" :min="1" :max="10" />
-      <Slider v-model="agentsPerSegment" label="Agents / segment" :min="1" :max="20" />
+      <Slider v-model="agentsPerSegment" label="Agents" :min="1" :max="20" />
 
       <div class="mode-row">
         <span class="settings-label">Mode</span>
@@ -67,11 +67,12 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Slider from '@/components/ui/Slider.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import run, { launchRun } from '@/composables/useRun.js'
+import run, { launchDemoTopic, launchRun } from '@/composables/useRun.js'
 import { getStudyInputs } from '@/data/studyInputs'
 
 const router = useRouter()
-const inputs = getStudyInputs(run.topicId)
+const configuredTopicId = run.topicId || 'orbit-note'
+const inputs = getStudyInputs(configuredTopicId)
 const personas = inputs.personas
 const environments = inputs.market
 const products = inputs.products
@@ -83,6 +84,10 @@ const launching = ref(false)
 const runError = ref('')
 
 const costEstimate = computed(() => rounds.value * agentsPerSegment.value * personas.length * 0.004)
+const isOrbitDemoCombo = computed(() => {
+  const sourceIds = new Set(canvasNodes.map(node => node.sourceId))
+  return configuredTopicId === 'orbit-note' && rounds.value === 5 && agentsPerSegment.value === 5 && sourceIds.has('orbit-workflow') && sourceIds.has('orbit-market-1') && sourceIds.has('orbit-asset-1')
+})
 
 let dragItem = null
 
@@ -114,7 +119,13 @@ async function runSim() {
   }
   launching.value = true
   runError.value = ''
-  await launchRun({ product: selectedProducts[0], environments: selectedEnvironments, personas: selectedPersonas, rounds: rounds.value, agentsPerSegment: agentsPerSegment.value })
+  if (isOrbitDemoCombo.value) {
+    launchDemoTopic('orbit-note', { agentIds: ['on-1', 'on-4', 'on-7', 'on-8', 'on-9'] })
+    launching.value = false
+    router.push('/swarm')
+    return
+  }
+  await launchRun({ product: selectedProducts[0], environments: selectedEnvironments, personas: selectedPersonas, rounds: rounds.value, agentsPerSegment: agentsPerSegment.value, runMode: mode.value })
   launching.value = false
   router.push('/swarm')
 }

@@ -36,16 +36,6 @@ TOPICS = [
         "quotes": ["A shared settlement that remembers our choices gives the group a reason to return.", "I cannot lose a whole season because I missed two evenings.", "I would wishlist after a demo that proves the social systems create stories, not just grind."],
         "recommendation": "Ship a public co-op demo centered on one seasonal transformation. Measure group return intent while testing catch-up, solo companions, and reduced midgame resource chores.",
     },
-    {
-        "slug": "harbor-commons", "name": "Harbor Commons", "category": "NEW APARTMENT COMMUNITY", "color": "#3B7355", "fit": 73,
-        "tagline": "A transit-oriented apartment community with flexible units, shared workspaces, and family services.",
-        "question": "Which amenities and lease design create enough value to support premium rents?",
-        "signals": [("Location value", 88), ("Tour intent", 71), ("Amenity fit", 68), ("Price trust", 49)],
-        "segments": [("Professionals", "Strong pull", "Transit, secure bike storage, and bookable quiet rooms improve monthly value."), ("Families and downsizers", "Conditional", "Storage, acoustics, guest space, and dependable services matter more than spectacle."), ("Budget renters", "At risk", "Mandatory amenity and surprise monthly fees undermine trust before a tour.")],
-        "objections": ["Total monthly cost and mandatory amenity fees", "Family storage, acoustics, and dependable childcare", "Late-night transit safety and building access controls"],
-        "quotes": ["Train access plus secure bike storage would let me drop a car payment.", "Publish the complete monthly cost before I tour.", "Ground-floor local retail makes the place feel like a neighborhood."],
-        "recommendation": "Test demand with transparent all-in pricing and three amenity bundles. Prioritize quiet work rooms, mobility infrastructure, safety, and functional family layouts.",
-    },
 ]
 
 

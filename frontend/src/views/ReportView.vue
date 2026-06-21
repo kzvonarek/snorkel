@@ -60,7 +60,10 @@ async function ask() {
   messages.value.push({ role: 'user', content: text }); question.value = ''; asking.value = true
   try {
     const history = messages.value.slice(0,-1).map(item => ({ role: item.role, content: item.content }))
-    const result = await askReport(text, history)
+    const [result] = await Promise.all([
+      askReport(text, history),
+      new Promise(resolve => setTimeout(resolve, 2200)),
+    ])
     messages.value.push({ role: 'assistant', content: result.response || result.message || 'No response returned.' })
   } catch (err) { messages.value.push({ role: 'assistant', content: `Unable to answer: ${err.message}` }) }
   finally { asking.value = false }

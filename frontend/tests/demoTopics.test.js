@@ -5,8 +5,8 @@ import test from 'node:test'
 import { demoTopics, topicMarkdown } from '../src/data/demoTopics.js'
 import { getStudyInputs } from '../src/data/studyInputs.js'
 
-test('ships three complete demo topics with valid agent thoughts', () => {
-  assert.equal(demoTopics.length, 3)
+test('ships two complete demo topics with valid agent thoughts', () => {
+  assert.equal(demoTopics.length, 2)
   for (const topic of demoTopics) {
     assert.equal(topic.agents.length, 9)
     assert.ok(topic.thoughts.length >= 12)
