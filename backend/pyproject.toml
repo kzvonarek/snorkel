@@ -32,6 +32,11 @@ dependencies = [
     # 工具库
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
+
+    # Integrations
+    "the-token-company",
+    "stagehand",
+    "sentry-sdk[flask]",
 ]
 
 [project.optional-dependencies]

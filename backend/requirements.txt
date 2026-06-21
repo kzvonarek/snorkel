@@ -33,3 +33,13 @@ python-dotenv>=1.0.0
 
 # 数据验证
 pydantic>=2.0.0
+
+# ============= Integrations =============
+# The Token Company — prompt compression middleware
+the-token-company
+
+# Browserbase / Stagehand — AI-native web browsing tools for agents
+stagehand
+
+# Sentry — error monitoring and performance tracing
+sentry-sdk[flask]

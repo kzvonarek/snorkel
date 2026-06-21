@@ -18,17 +18,20 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
+import sentry_sdk
+
 from ..config import Config
 from ..utils.llm_client import LLMClient
 from ..utils.logger import get_logger
 from ..utils.locale import get_language_instruction, t
 from .memory_tools import (
     MemoryToolsService,
-    SearchResult, 
-    InsightForgeResult, 
+    SearchResult,
+    InsightForgeResult,
     PanoramaResult,
     InterviewResult
 )
+from .web_tools import WebToolsService
 
 logger = get_logger('mirofish.report_agent')
 
@@ -547,6 +550,45 @@ TOOL_DESC_INTERVIEW_AGENTS = """\
 
 【重要】需要OASIS模拟环境正在运行才能使用此功能！"""
 
+TOOL_DESC_BROWSE_WEB = """\
+[Web Browser - Navigate and Act]
+Use a real headless browser (via Browserbase) to visit a URL and perform a
+natural-language action on the page (click, scroll, fill forms, etc.).
+
+Use when:
+- You need to retrieve live web content that is not in the simulation graph
+- The page requires JavaScript rendering or user interaction
+
+Parameters:
+- url: The full URL to navigate to
+- instruction: Natural-language description of what to do on the page"""
+
+TOOL_DESC_EXTRACT_WEB_DATA = """\
+[Web Data Extractor - Structured Extraction]
+Navigate to a URL and extract structured data from it using AI-powered
+understanding (via Browserbase / Stagehand extract).
+
+Use when:
+- You need specific data from a web page (prices, names, stats, articles)
+- You want a structured summary rather than raw page text
+
+Parameters:
+- url: The full URL to navigate to
+- schema_description: Description of what data to extract (e.g. "product names and prices", "article headline and author")"""
+
+TOOL_DESC_OBSERVE_WEB = """\
+[Web Observer - Page Analysis]
+Navigate to a URL and answer a query about the page's content or discover
+actionable elements using Stagehand observe().
+
+Use when:
+- You want to understand what's on a page before acting
+- You need to check whether certain information is present
+
+Parameters:
+- url: The full URL to navigate to
+- query: What you want to know about the page"""
+
 # ── 大纲规划 prompt ──
 
 PLAN_SYSTEM_PROMPT = """\
@@ -905,7 +947,8 @@ class ReportAgent:
         
         self.llm = llm_client or LLMClient()
         self.memory_tools = memory_tools or MemoryToolsService()
-        
+        self.web_tools = WebToolsService()
+
         # 工具定义
         self.tools = self._define_tools()
         
@@ -918,7 +961,7 @@ class ReportAgent:
     
     def _define_tools(self) -> Dict[str, Dict[str, Any]]:
         """定义可用工具"""
-        return {
+        tools = {
             "insight_forge": {
                 "name": "insight_forge",
                 "description": TOOL_DESC_INSIGHT_FORGE,
@@ -952,6 +995,35 @@ class ReportAgent:
                 }
             }
         }
+
+        # Browserbase web tools (only registered when credentials are present)
+        if self.web_tools.is_available():
+            tools["browse_web"] = {
+                "name": "browse_web",
+                "description": TOOL_DESC_BROWSE_WEB,
+                "parameters": {
+                    "url": "The full URL to navigate to",
+                    "instruction": "Natural-language instruction for what to do on the page"
+                }
+            }
+            tools["extract_web_data"] = {
+                "name": "extract_web_data",
+                "description": TOOL_DESC_EXTRACT_WEB_DATA,
+                "parameters": {
+                    "url": "The full URL to navigate to",
+                    "schema_description": "Description of what data to extract from the page"
+                }
+            }
+            tools["observe_web"] = {
+                "name": "observe_web",
+                "description": TOOL_DESC_OBSERVE_WEB,
+                "parameters": {
+                    "url": "The full URL to navigate to",
+                    "query": "What you want to know about the page"
+                }
+            }
+
+        return tools
     
     def _execute_tool(self, tool_name: str, parameters: Dict[str, Any], report_context: str = "") -> str:
         """
@@ -966,7 +1038,10 @@ class ReportAgent:
             工具执行结果（文本格式）
         """
         logger.info(t('report.executingTool', toolName=tool_name, params=parameters))
-        
+
+        with sentry_sdk.start_span(op="agent.tool", name=f"tool:{tool_name}") as span:
+            span.set_data("tool_name", tool_name)
+
         try:
             if tool_name == "insight_forge":
                 query = parameters.get("query", "")
@@ -1020,8 +1095,25 @@ class ReportAgent:
                 )
                 return result.to_text()
             
+            # ========== Browserbase web tools ==========
+
+            elif tool_name == "browse_web":
+                url = parameters.get("url", "")
+                instruction = parameters.get("instruction", "")
+                return self.web_tools.browse_web(url, instruction)
+
+            elif tool_name == "extract_web_data":
+                url = parameters.get("url", "")
+                schema_description = parameters.get("schema_description", "")
+                return self.web_tools.extract_web_data(url, schema_description)
+
+            elif tool_name == "observe_web":
+                url = parameters.get("url", "")
+                query = parameters.get("query", "")
+                return self.web_tools.observe_web(url, query)
+
             # ========== 向后兼容的旧工具（内部重定向到新工具） ==========
-            
+
             elif tool_name == "search_graph":
                 # 重定向到 quick_search
                 logger.info(t('report.redirectToQuickSearch'))
@@ -1058,11 +1150,15 @@ class ReportAgent:
                 return f"未知工具: {tool_name}。请使用以下工具之一: insight_forge, panorama_search, quick_search"
                 
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             logger.error(t('report.toolExecFailed', toolName=tool_name, error=str(e)))
             return f"工具执行失败: {str(e)}"
-    
+
     # 合法的工具名称集合，用于裸 JSON 兜底解析时校验
-    VALID_TOOL_NAMES = {"insight_forge", "panorama_search", "quick_search", "interview_agents"}
+    VALID_TOOL_NAMES = {
+        "insight_forge", "panorama_search", "quick_search", "interview_agents",
+        "browse_web", "extract_web_data", "observe_web",
+    }
 
     def _parse_tool_calls(self, response: str) -> List[Dict[str, Any]]:
         """
@@ -1134,8 +1230,9 @@ class ReportAgent:
                 desc_parts.append(f"  参数: {params_desc}")
         return "\n".join(desc_parts)
     
+    @sentry_sdk.trace
     def plan_outline(
-        self, 
+        self,
         progress_callback: Optional[Callable] = None
     ) -> ReportOutline:
         """
@@ -1150,10 +1247,10 @@ class ReportAgent:
             ReportOutline: 报告大纲
         """
         logger.info(t('report.startPlanningOutline'))
-        
+
         if progress_callback:
             progress_callback("planning", 0, t('progress.analyzingRequirements'))
-        
+
         # 首先获取模拟上下文
         context = self.memory_tools.get_simulation_context(
             graph_id=self.graph_id,
@@ -1218,8 +1315,9 @@ class ReportAgent:
                 ]
             )
     
+    @sentry_sdk.trace
     def _generate_section_react(
-        self, 
+        self,
         section: ReportSection,
         outline: ReportOutline,
         previous_sections: List[str],
@@ -1529,8 +1627,9 @@ class ReportAgent:
         
         return final_answer
     
+    @sentry_sdk.trace
     def generate_report(
-        self, 
+        self,
         progress_callback: Optional[Callable[[str, int, str], None]] = None,
         report_id: Optional[str] = None
     ) -> Report:
@@ -1763,8 +1862,9 @@ class ReportAgent:
             
             return report
     
+    @sentry_sdk.trace
     def chat(
-        self, 
+        self,
         message: str,
         chat_history: List[Dict[str, str]] = None
     ) -> Dict[str, Any]:

@@ -18,6 +18,18 @@ from .utils.logger import setup_logger, get_logger
 
 def create_app(config_class=Config):
     """Flask应用工厂函数"""
+    # Sentry must be initialised before the Flask app so FlaskIntegration wraps it
+    if Config.SENTRY_DSN:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(
+            dsn=Config.SENTRY_DSN,
+            integrations=[FlaskIntegration(transaction_style="url")],
+            traces_sample_rate=Config.SENTRY_TRACES_SAMPLE_RATE,
+            environment=Config.SENTRY_ENVIRONMENT,
+            send_default_pii=False,
+        )
+
     app = Flask(__name__)
     app.config.from_object(config_class)
     

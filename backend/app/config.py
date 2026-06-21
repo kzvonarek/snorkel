@@ -67,6 +67,21 @@ class Config:
     REPORT_AGENT_MAX_TOOL_CALLS = int(os.environ.get('REPORT_AGENT_MAX_TOOL_CALLS', '5'))
     REPORT_AGENT_MAX_REFLECTION_ROUNDS = int(os.environ.get('REPORT_AGENT_MAX_REFLECTION_ROUNDS', '2'))
     REPORT_AGENT_TEMPERATURE = float(os.environ.get('REPORT_AGENT_TEMPERATURE', '0.5'))
+
+    # The Token Company — prompt compression middleware
+    TOKEN_COMPANY_ENABLED = os.environ.get('TOKEN_COMPANY_ENABLED', 'false').lower() == 'true'
+    TOKEN_COMPANY_API_KEY = os.environ.get('TOKEN_COMPANY_API_KEY')  # ttc-...
+    TOKEN_COMPANY_MIN_CHARS = int(os.environ.get('TOKEN_COMPANY_MIN_CHARS', '2000'))
+
+    # Browserbase / Stagehand — agent web browsing tools
+    BROWSERBASE_ENABLED = os.environ.get('BROWSERBASE_ENABLED', 'false').lower() == 'true'
+    BROWSERBASE_API_KEY = os.environ.get('BROWSERBASE_API_KEY')
+    BROWSERBASE_PROJECT_ID = os.environ.get('BROWSERBASE_PROJECT_ID')
+
+    # Sentry — observability
+    SENTRY_DSN = os.environ.get('SENTRY_DSN')
+    SENTRY_TRACES_SAMPLE_RATE = float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0.2'))
+    SENTRY_ENVIRONMENT = os.environ.get('SENTRY_ENVIRONMENT', 'development')
     
     @classmethod
     def validate(cls) -> list[str]:
