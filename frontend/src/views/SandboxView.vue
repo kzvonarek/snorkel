@@ -54,7 +54,8 @@
         <div class="cost-value">${{ costEstimate.toFixed(2) }}</div>
       </div>
 
-      <BaseButton variant="primary" pill style="width:100%;justify-content:center;" @click="runSim">
+      <div v-if="runError" class="run-error">{{ runError }}</div>
+      <BaseButton variant="primary" pill style="width:100%;justify-content:center;" :disabled="launching" @click="runSim">
         Run simulation →
       </BaseButton>
     </div>
@@ -66,16 +67,20 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Slider from '@/components/ui/Slider.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { personas } from '@/data/personas.js'
-import { environments } from '@/data/environments.js'
-import { productAssets as products } from '@/data/products.js'
-import { startRun } from '@/composables/useRun.js'
+import run, { launchRun } from '@/composables/useRun.js'
+import { getStudyInputs } from '@/data/studyInputs'
 
 const router = useRouter()
+const inputs = getStudyInputs(run.topicId)
+const personas = inputs.personas
+const environments = inputs.market
+const products = inputs.products
 const canvasNodes = reactive([])
 const rounds = ref(5)
 const agentsPerSegment = ref(5)
 const mode = ref('social')
+const launching = ref(false)
+const runError = ref('')
 
 const costEstimate = computed(() => rounds.value * agentsPerSegment.value * personas.length * 0.004)
 
@@ -90,6 +95,7 @@ function onDrop(e) {
   const rect = e.currentTarget.getBoundingClientRect()
   canvasNodes.push({
     id: dragItem.id + '-' + Date.now(),
+    sourceId: dragItem.id,
     name: dragItem.name,
     type: dragItem.type,
     x: e.clientX - rect.left - 65,
@@ -98,8 +104,18 @@ function onDrop(e) {
   dragItem = null
 }
 
-function runSim() {
-  startRun(rounds.value)
+async function runSim() {
+  const selectedPersonas = canvasNodes.filter(node => node.type === 'segment').map(node => personas.find(item => item.id === node.sourceId)).filter(Boolean)
+  const selectedProducts = canvasNodes.filter(node => node.type === 'product').map(node => products.find(item => item.id === node.sourceId)).filter(Boolean)
+  const selectedEnvironments = canvasNodes.filter(node => node.type === 'environment').map(node => environments.find(item => item.id === node.sourceId)).filter(Boolean)
+  if (!selectedPersonas.length || !selectedProducts.length) {
+    runError.value = 'Add at least one persona segment and one product asset to the canvas.'
+    return
+  }
+  launching.value = true
+  runError.value = ''
+  await launchRun({ product: selectedProducts[0], environments: selectedEnvironments, personas: selectedPersonas, rounds: rounds.value, agentsPerSegment: agentsPerSegment.value })
+  launching.value = false
   router.push('/swarm')
 }
 </script>

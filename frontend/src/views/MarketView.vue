@@ -1,5 +1,6 @@
 <template>
   <div class="market">
+    <div v-if="topic" class="study-banner"><span :style="{ background: topic.color }"></span><div><strong>{{ topic.name }}</strong><small>Competitive and environmental context</small></div></div>
     <DropZone
       label="Drop competitive intelligence files here"
       sub="PDF, DOCX, PNG — market reports, analyst decks, competitor reviews"
@@ -30,9 +31,12 @@
 <script setup>
 import { reactive } from 'vue'
 import DropZone from '@/components/ui/DropZone.vue'
-import { environments as raw } from '@/data/environments.js'
+import run from '@/composables/useRun'
+import { getDemoTopic } from '@/data/demoTopics'
+import { getStudyInputs } from '@/data/studyInputs'
 
-const envs = reactive([...raw])
+const topic = run.topicId ? getDemoTopic(run.topicId) : null
+const envs = reactive([...(topic ? getStudyInputs(topic.id).market : [])])
 
 function addFiles(files) {
   files.forEach(f => {
@@ -49,6 +53,7 @@ function addFiles(files) {
 
 <style scoped>
 .market { display: flex; flex-direction: column; gap: 28px; }
+.study-banner { display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px; }.study-banner>span { width:10px;height:32px;border-radius:5px; }.study-banner div { display:flex;flex-direction:column; }.study-banner small { color:var(--text-3); }
 
 .env-heading { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 12px; }
 

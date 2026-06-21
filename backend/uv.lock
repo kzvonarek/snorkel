@@ -1030,7 +1030,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agent-memory-client", specifier = ">=0.14.0" },
+    { name = "agent-memory-client", specifier = ">=0.14.0,<0.15" },
     { name = "camel-ai", specifier = "==0.2.78" },
     { name = "camel-oasis", specifier = "==0.2.5" },
     { name = "chardet", specifier = ">=5.0.0" },
