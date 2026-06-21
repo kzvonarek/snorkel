@@ -22,22 +22,23 @@ const router = useRouter()
 const routeMeta = {
   '/':          { title: 'Overview',           action: '' },
   '/projects':  { title: 'Projects',           action: 'New project' },
+  '/projects/new': { title: 'New project',     action: '' },
   '/connect':   { title: 'Connect data',        action: 'Save connections' },
   '/personas':  { title: 'Personas & segments', action: 'Add persona' },
   '/market':    { title: 'Market context',       action: 'Save' },
   '/products':  { title: 'Product material',     action: 'Upload asset' },
-  '/sandbox':   { title: 'Configure run',        action: 'Run simulation' },
+  '/sandbox':   { title: 'Configure run',        action: '' },
   '/swarm':     { title: 'Live swarm feed',      action: '' },
   '/results':   { title: 'Results dashboard',    action: 'Build report →' },
-  '/report':    { title: 'Report & chat',        action: 'Download PDF' },
+  '/report':    { title: 'Report & chat',        action: '' },
 }
 
 const topbarTitle  = computed(() => routeMeta[route.path]?.title  ?? '')
 const topbarAction = computed(() => routeMeta[route.path]?.action ?? '')
 
 const actionRoutes = {
+  '/projects': '/projects/new',
   '/results': '/report',
-  '/sandbox': '/swarm',
 }
 
 function handleAction() {

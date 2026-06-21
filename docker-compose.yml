@@ -10,7 +10,8 @@ services:
   memory-api:
     image: redislabs/agent-memory-server:latest
     restart: unless-stopped
-    depends_on: [redis]
+    depends_on:
+      - redis
     ports:
       - "8000:8000"
     environment:
@@ -24,7 +25,8 @@ services:
   memory-worker:
     image: redislabs/agent-memory-server:latest
     restart: unless-stopped
-    depends_on: [redis]
+    depends_on:
+      - redis
     environment:
       REDIS_URL: redis://redis:6379
       OPENAI_API_KEY: ${LLM_API_KEY}
@@ -32,17 +34,21 @@ services:
       EMBEDDING_MODEL: ${AMS_EMBEDDING_MODEL:-text-embedding-3-small}
     command: agent-memory task-worker --concurrency 10
 
-  snorkel:
-    build: .
-    container_name: snorkel
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: snorkel-app
     env_file:
       - .env
+    depends_on:
+      - memory-api
+      - memory-worker
     ports:
       - "3000:3000"
       - "5001:5001"
     volumes:
       - ./backend/uploads:/app/backend/uploads
-    depends_on: [redis, memory-api]
     restart: unless-stopped
 
 volumes:
