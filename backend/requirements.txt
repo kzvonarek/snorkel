@@ -18,7 +18,7 @@ agent-memory-client>=0.14.0
 
 # ============= OASIS 社交媒体模拟 =============
 # OASIS 社交模拟框架
-camel-oasis
+camel-oasis==0.2.5
 camel-ai==0.2.78
 
 # ============= 文件处理 =============
