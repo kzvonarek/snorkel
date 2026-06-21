@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PMF Simulator — Wireframes</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #f4f4f2;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 40px 24px 100px;
+  }
+  .page {
+    max-width: 1040px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .intro {
+    color: #6b6b68;
+    font-size: 14px;
+    margin-bottom: 48px;
+  }
+  .screen {
+    margin-bottom: 64px;
+  }
+  .screen-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8a8a86;
+    margin-bottom: 6px;
+  }
+  .screen-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .frame {
+    background: #ffffff;
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    padding: 16px;
+    position: relative;
+  }
+  .box {
+    border: 1.5px dashed #9c9c96;
+    border-radius: 4px;
+    background: #fafaf8;
+    color: #6b6b68;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6px;
+  }
+  .box.solid {
+    border-style: solid;
+    background: #eeeeea;
+  }
+  .box .lbl {
+    font-weight: 600;
+    color: #444441;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .row { display: flex; gap: 12px; }
+  .col { display: flex; flex-direction: column; gap: 12px; }
+
+  /* Screen 1: grid */
+  .grid-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .card {
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    background: #fafaf8;
+    padding: 10px;
+  }
+  .card .thumb {
+    height: 70px;
+    background: #e4e4df;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 11px;
+  }
+  .card .name { font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
+  .card .meta { font-size: 11px; color: #8a8a86; display: flex; justify-content: space-between; }
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .pill.green { background: #dcecd2; color: #3b6d11; }
+  .pill.amber { background: #f7e3bf; color: #854f0b; }
+  .pill.gray { background: #e4e4df; color: #6b6b68; }
+
+  /* Screen 6: sandbox canvas */
+  .canvas {
+    height: 360px;
+    background:
+      linear-gradient(0deg, transparent 24px, #eceae4 25px),
+      linear-gradient(90deg, transparent 24px, #eceae4 25px);
+    background-size: 25px 25px;
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .node-card {
+    position: absolute;
+    width: 130px;
+    border: 1.5px solid #9c9c96;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 8px;
+    font-size: 11px;
+    box-shadow: 1px 2px 0 rgba(0,0,0,0.04);
+  }
+  .node-card .t { font-weight: 600; margin-bottom: 2px; }
+  .node-card .s { color: #8a8a86; }
+  .side-panel {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 160px;
+    background: #fdfdfc;
+    border-left: 1.5px dashed #b8b8b3;
+    padding: 10px;
+    font-size: 11px;
+    color: #6b6b68;
+  }
+  .run-btn {
+    position: absolute;
+    bottom: 12px; right: 176px;
+    background: #2c2c2a;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 16px;
+  }
+
+  /* Screen 7: swarm */
+  .swarm-frame {
+    height: 380px;
+    background: #16181a;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cluster-label {
+    position: absolute;
+    color: #8e9196;
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .dot {
+    position: absolute;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  .dot.green { box-shadow: 0 0 0 5px rgba(99,153,34,0.35); }
+  .dot.amber { box-shadow: 0 0 0 5px rgba(186,117,23,0.35); }
+  .dot.red   { box-shadow: 0 0 0 5px rgba(163,45,45,0.35); }
+  .overlay-card {
+    position: absolute;
+    top: 40px; left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1.5px solid #b8b8b3;
+    padding: 12px;
+    font-size: 11px;
+    color: #444441;
+  }
+  .overlay-card .t { font-weight: 600; font-size: 12px; margin-bottom: 6px; }
+  .overlay-card .entry { padding: 4px 0; border-bottom: 1px solid #eceae4; }
+  .overlay-card .entry:last-child { border-bottom: none; }
+  .timeline-bar {
+    position: absolute;
+    bottom: 10px; left: 16px; right: 16px;
+    height: 28px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 10px;
+    color: #8e9196;
+  }
+
+  /* Screen 8: results dashboard */
+  .stat-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .stat-box {
+    flex: 1;
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    background: #fafaf8;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-box .big { font-size: 22px; font-weight: 700; }
+  .stat-box .cap { font-size: 11px; color: #8a8a86; margin-top: 2px; }
+  .seg-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid #eceae4;
+    font-size: 12px;
+  }
+  .seg-row:last-child { border-bottom: none; }
+  .seg-bar-track { flex: 1; height: 8px; background: #eceae4; border-radius: 4px; overflow: hidden; }
+  .seg-bar-fill { height: 100%; }
+
+  /* Screen 9/10: report + chat */
+  .report-layout { display: flex; gap: 0; height: 420px; }
+  .sidebar {
+    width: 150px;
+    border: 1.5px solid #b8b8b3;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+    background: #fafaf8;
+    padding: 10px;
+    font-size: 11px;
+  }
+  .sidebar .item { padding: 6px 4px; border-radius: 4px; margin-bottom: 2px; color: #444441; }
+  .sidebar .item.active { background: #e4e4df; font-weight: 600; }
+  .pdf-pane {
+    flex: 1.6;
+    border: 1.5px solid #b8b8b3;
+    background: #ffffff;
+    padding: 16px;
+    overflow: hidden;
+  }
+  .pdf-page {
+    background: #fdfdfc;
+    border: 1px solid #e4e4df;
+    height: 100%;
+    padding: 14px;
+  }
+  .pdf-line { height: 6px; background: #eceae4; border-radius: 3px; margin-bottom: 8px; }
+  .pdf-chart { height: 70px; background: #eceae4; border-radius: 4px; margin-bottom: 12px; }
+  .chat-pane {
+    width: 220px;
+    border: 1.5px solid #b8b8b3;
+    border-left: 1.5px dashed #b8b8b3;
+    border-radius: 0 6px 6px 0;
+    background: #fafaf8;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+  }
+  .chat-msgs { flex: 1; font-size: 11px; }
+  .bubble {
+    background: #eceae4;
+    border-radius: 8px;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    max-width: 90%;
+  }
+  .bubble.user { background: #444441; color: #fff; margin-left: auto; }
+  .chat-input {
+    border: 1.5px solid #b8b8b3;
+    border-radius: 14px;
+    font-size: 11px;
+    color: #8a8a86;
+    padding: 6px 10px;
+  }
+  .annot {
+    font-size: 11px;
+    color: #8a8a86;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  /* Screen 2: connect data channels */
+  .connector-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .connector-card {
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    background: #fafaf8;
+    padding: 12px;
+  }
+  .connector-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .connector-card .name { font-size: 13px; font-weight: 600; }
+  .connect-btn {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1.5px solid #444441;
+    color: #444441;
+  }
+  .connect-btn.connected {
+    background: #444441;
+    color: #fff;
+    border-color: #444441;
+  }
+  .fidelity-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #8a8a86;
+    margin-bottom: 3px;
+  }
+  .fidelity-bar-track {
+    height: 5px;
+    background: #eceae4;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .fidelity-bar-fill { height: 100%; }
+
+  /* Screen 3: persona review */
+  .persona-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .persona-card {
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    background: #fafaf8;
+    padding: 12px;
+  }
+  .persona-card .head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+  }
+  .persona-card .name { font-size: 13px; font-weight: 600; }
+  .persona-card .size { font-size: 10.5px; color: #8a8a86; }
+  .trait-pill {
+    display: inline-block;
+    font-size: 10px;
+    background: #eceae4;
+    color: #444441;
+    border-radius: 10px;
+    padding: 2px 7px;
+    margin: 2px 3px 0 0;
+  }
+  .quote-box {
+    margin-top: 8px;
+    border-left: 2px solid #c8c8c2;
+    padding-left: 8px;
+    font-size: 10.5px;
+    color: #6b6b68;
+    font-style: italic;
+  }
+  .persona-actions {
+    margin-top: 8px;
+    display: flex;
+    gap: 6px;
+  }
+  .mini-btn {
+    font-size: 10px;
+    color: #6b6b68;
+    border: 1px solid #c8c8c2;
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+
+  /* Screen 4: market & competitive context */
+  .context-list { display: flex; flex-direction: column; gap: 8px; }
+  .context-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    background: #fafaf8;
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  .context-row .icon {
+    width: 28px; height: 28px;
+    background: #e4e4df;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .context-row .title { font-weight: 600; flex: 1; }
+  .context-tag {
+    font-size: 10px;
+    background: #e4e4df;
+    color: #6b6b68;
+    border-radius: 10px;
+    padding: 2px 8px;
+  }
+
+  /* Screen 5: upload product material */
+  .dropzone {
+    border: 2px dashed #b8b8b3;
+    border-radius: 6px;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a8a86;
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+  .asset-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1.5px solid #b8b8b3;
+    border-radius: 6px;
+    background: #fafaf8;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .asset-row .thumb-sm {
+    width: 36px; height: 36px;
+    background: #e4e4df;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .asset-row .title { font-weight: 600; flex: 1; }
+  .version-chip {
+    font-size: 10px;
+    background: #dcecd2;
+    color: #3b6d11;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>PMF simulator — rough wireframes</h1>
+  <div class="intro">Low-fidelity reference for layout and structure, not visual design.</div>
+
+  <!-- SCREEN 1 -->
+  <div class="screen">
+    <div class="screen-label">Screen 1</div>
+    <div class="screen-title">Project grid</div>
+    <div class="frame">
+      <div class="grid-cards">
+        <div class="card">
+          <div class="thumb">thumbnail</div>
+          <div class="name">Pricing page v2</div>
+          <div class="meta"><span class="pill green">PMF 71</span><span>Ready</span></div>
+        </div>
+        <div class="card">
+          <div class="thumb">thumbnail</div>
+          <div class="name">Onboarding flow</div>
+          <div class="meta"><span class="pill amber">PMF 54 ±12</span><span>Ready</span></div>
+        </div>
+        <div class="card">
+          <div class="thumb">thumbnail</div>
+          <div class="name">New mobile app</div>
+          <div class="meta"><span class="pill gray">Running…</span><span>2 min left</span></div>
+        </div>
+        <div class="card">
+          <div class="thumb">thumbnail</div>
+          <div class="name">Checkout redesign</div>
+          <div class="meta"><span class="pill gray">Connecting data</span><span>—</span></div>
+        </div>
+      </div>
+      <div class="annot">Each card: thumbnail of uploaded asset, PMF score badge with confidence qualifier when low, status, last-run date. Repeat-run cards could show a small trend arrow vs previous version.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2 -->
+  <div class="screen">
+    <div class="screen-label">Screen 2</div>
+    <div class="screen-title">Connect data channels</div>
+    <div class="frame">
+      <div class="connector-grid">
+        <div class="connector-card">
+          <div class="head">
+            <span class="name">PostHog</span>
+            <span class="connect-btn connected">Connected</span>
+          </div>
+          <div class="fidelity-row"><span>Users with ID</span><span>92%</span></div>
+          <div class="fidelity-bar-track"><div class="fidelity-bar-fill" style="width:92%; background:#639922;"></div></div>
+          <div class="fidelity-row"><span>Date range</span><span>14 months</span></div>
+        </div>
+        <div class="connector-card">
+          <div class="head">
+            <span class="name">Zendesk</span>
+            <span class="connect-btn connected">Connected</span>
+          </div>
+          <div class="fidelity-row"><span>Users with ID</span><span>61%</span></div>
+          <div class="fidelity-bar-track"><div class="fidelity-bar-fill" style="width:61%; background:#BA7517;"></div></div>
+          <div class="fidelity-row"><span>Date range</span><span>6 months</span></div>
+        </div>
+        <div class="connector-card">
+          <div class="head">
+            <span class="name">App store reviews</span>
+            <span class="connect-btn">Connect</span>
+          </div>
+          <div class="fidelity-row"><span>Users with ID</span><span>—</span></div>
+          <div class="fidelity-bar-track"><div class="fidelity-bar-fill" style="width:0%;"></div></div>
+          <div class="fidelity-row"><span>Date range</span><span>—</span></div>
+        </div>
+        <div class="connector-card">
+          <div class="head">
+            <span class="name">Amplitude</span>
+            <span class="connect-btn">Connect</span>
+          </div>
+          <div class="fidelity-row"><span>Users with ID</span><span>—</span></div>
+          <div class="fidelity-bar-track"><div class="fidelity-bar-fill" style="width:0%;"></div></div>
+          <div class="fidelity-row"><span>Date range</span><span>—</span></div>
+        </div>
+        <div class="connector-card">
+          <div class="head">
+            <span class="name">Intercom</span>
+            <span class="connect-btn">Connect</span>
+          </div>
+          <div class="fidelity-row"><span>Users with ID</span><span>—</span></div>
+          <div class="fidelity-bar-track"><div class="fidelity-bar-fill" style="width:0%;"></div></div>
+          <div class="fidelity-row"><span>Date range</span><span>—</span></div>
+        </div>
+        <div class="connector-card">
+          <div class="head">
+            <span class="name">Manual CSV upload</span>
+            <span class="connect-btn">Upload</span>
+          </div>
+          <div class="fidelity-row"><span>Users with ID</span><span>—</span></div>
+          <div class="fidelity-bar-track"><div class="fidelity-bar-fill" style="width:0%;"></div></div>
+          <div class="fidelity-row"><span>Date range</span><span>—</span></div>
+        </div>
+      </div>
+      <div class="annot">Each connector shows fidelity at a glance: % of users with a usable ID (needed for grouping) and date range coverage. Low fidelity (amber/red fill) carries forward as a confidence warning into persona setup.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3 -->
+  <div class="screen">
+    <div class="screen-label">Screen 3</div>
+    <div class="screen-title">Persona / segment review</div>
+    <div class="frame">
+      <div class="persona-grid">
+        <div class="persona-card">
+          <div class="head">
+            <div>
+              <div class="name">Enterprise admins</div>
+              <div class="size">142 users grouped</div>
+            </div>
+            <span class="pill green">high conf</span>
+          </div>
+          <div>
+            <span class="trait-pill">daily active</span>
+            <span class="trait-pill">multi-seat</span>
+            <span class="trait-pill">low ticket volume</span>
+          </div>
+          <div class="quote-box">"We need SSO before rollout" — support ticket #4021</div>
+          <div class="persona-actions">
+            <span class="mini-btn">Split</span>
+            <span class="mini-btn">Merge</span>
+            <span class="mini-btn">Edit traits</span>
+          </div>
+        </div>
+        <div class="persona-card">
+          <div class="head">
+            <div>
+              <div class="name">SMB owners</div>
+              <div class="size">28 users grouped</div>
+            </div>
+            <span class="pill amber">low conf</span>
+          </div>
+          <div>
+            <span class="trait-pill">price sensitive</span>
+            <span class="trait-pill">inferred</span>
+            <span class="trait-pill">low session count</span>
+          </div>
+          <div class="quote-box">Synthetic — no support data, traits inferred from market context</div>
+          <div class="persona-actions">
+            <span class="mini-btn">Split</span>
+            <span class="mini-btn">Merge</span>
+            <span class="mini-btn">Edit traits</span>
+          </div>
+        </div>
+        <div class="persona-card">
+          <div class="head">
+            <div>
+              <div class="name">Churn-risk users</div>
+              <div class="size">19 users grouped</div>
+            </div>
+            <span class="pill green">high conf</span>
+          </div>
+          <div>
+            <span class="trait-pill">declining usage</span>
+            <span class="trait-pill">2+ tickets</span>
+            <span class="trait-pill">negative sentiment</span>
+          </div>
+          <div class="quote-box">"Cancelling unless this gets fixed" — Zendesk #3877</div>
+          <div class="persona-actions">
+            <span class="mini-btn">Split</span>
+            <span class="mini-btn">Merge</span>
+            <span class="mini-btn">Edit traits</span>
+          </div>
+        </div>
+        <div class="persona-card">
+          <div class="head">
+            <div>
+              <div class="name">New trial users</div>
+              <div class="size">64 users grouped</div>
+            </div>
+            <span class="pill green">high conf</span>
+          </div>
+          <div>
+            <span class="trait-pill">&lt;14 days</span>
+            <span class="trait-pill">exploring features</span>
+          </div>
+          <div class="quote-box">"Still figuring out where reports live" — session replay notes</div>
+          <div class="persona-actions">
+            <span class="mini-btn">Split</span>
+            <span class="mini-btn">Merge</span>
+            <span class="mini-btn">Edit traits</span>
+          </div>
+        </div>
+      </div>
+      <div class="annot">Auto-derived segments shown as cards: size, traits, a representative real quote, and a confidence badge. Low-confidence cards say explicitly what's missing rather than just showing a color.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4 -->
+  <div class="screen">
+    <div class="screen-label">Screen 4</div>
+    <div class="screen-title">Market &amp; competitive context (optional)</div>
+    <div class="frame">
+      <div class="dropzone">Drag in competitor analysis, market research, analyst reports</div>
+      <div class="context-list">
+        <div class="context-row">
+          <div class="icon"></div>
+          <div class="title">Competitor pricing teardown — Q2 2026</div>
+          <span class="context-tag">market context</span>
+        </div>
+        <div class="context-row">
+          <div class="icon"></div>
+          <div class="title">Gartner: PM tooling landscape</div>
+          <span class="context-tag">market context</span>
+        </div>
+        <div class="context-row">
+          <div class="icon"></div>
+          <div class="title">Internal win/loss analysis</div>
+          <span class="context-tag">market context</span>
+        </div>
+      </div>
+      <div class="annot">Kept visually separate from screen 2's customer data — these documents shape agents' broader worldview but are tagged "context" so they're never confused with direct customer evidence in the report.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 5 -->
+  <div class="screen">
+    <div class="screen-label">Screen 5</div>
+    <div class="screen-title">Upload product material</div>
+    <div class="frame">
+      <div class="dropzone">Drag and drop mockups, screenshots, PRDs, or paste a Figma link</div>
+      <div class="asset-row">
+        <div class="thumb-sm"></div>
+        <span class="title">Pricing page — v2</span>
+        <span class="version-chip">v2</span>
+      </div>
+      <div class="asset-row">
+        <div class="thumb-sm"></div>
+        <span class="title">Pricing page — v1</span>
+        <span class="version-chip" style="background:#e4e4df; color:#6b6b68;">v1</span>
+      </div>
+      <div class="asset-row">
+        <div class="thumb-sm"></div>
+        <span class="title">Onboarding flow PRD.pdf</span>
+        <span class="version-chip" style="background:#e4e4df; color:#6b6b68;">draft</span>
+      </div>
+      <div class="annot">Multiple versions of the same asset can be tagged (v1 vs v2) so a PM can compare how the swarm reacts to each in separate or linked simulation runs.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 6 -->
+  <div class="screen">
+    <div class="screen-label">Screen 6</div>
+    <div class="screen-title">Sandbox canvas — configure simulation</div>
+    <div class="frame">
+      <div class="canvas">
+        <div class="node-card" style="top:30px; left:30px;">
+          <div class="t">Enterprise segment</div>
+          <div class="s">42 agents · high confidence</div>
+        </div>
+        <div class="node-card" style="top:120px; left:60px;">
+          <div class="t">SMB segment</div>
+          <div class="s">28 agents · low confidence</div>
+        </div>
+        <div class="node-card" style="top:210px; left:30px;">
+          <div class="t">Support tickets</div>
+          <div class="s">data channel</div>
+        </div>
+        <div class="node-card" style="top:60px; left:230px;">
+          <div class="t">Pricing page v2</div>
+          <div class="s">product asset</div>
+        </div>
+        <div class="node-card" style="top:170px; left:230px;">
+          <div class="t">Competitor brief</div>
+          <div class="s">market context</div>
+        </div>
+        <div class="side-panel">
+          <div style="font-weight:600; margin-bottom:8px;">Run settings</div>
+          <div style="margin-bottom:6px;">Rounds: 20</div>
+          <div style="margin-bottom:6px;">Agents/segment: max 50</div>
+          <div style="margin-bottom:6px;">Mode: agents debate</div>
+          <div>Est. cost: $4.20 · 6 min</div>
+        </div>
+        <div class="run-btn">Run simulation</div>
+      </div>
+      <div class="annot">Items dragged in from screens 2–5's libraries. Minimum to enable run: one persona segment + one product asset. Side panel holds simulation parameters; canvas stays spatial and uncluttered.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 7 -->
+  <div class="screen">
+    <div class="screen-label">Screen 7</div>
+    <div class="screen-title">Live agent swarm</div>
+    <div class="frame">
+      <div class="swarm-frame">
+        <div class="cluster-label" style="top:14px; left:20px;">Enterprise cluster</div>
+        <div class="cluster-label" style="top:14px; left:300px;">SMB cluster</div>
+
+        <!-- enterprise cluster dots (mostly green) -->
+        <div class="dot green" style="top:40px; left:40px;"></div>
+        <div class="dot green" style="top:60px; left:70px;"></div>
+        <div class="dot green" style="top:80px; left:35px;"></div>
+        <div class="dot amber" style="top:55px; left:110px;"></div>
+        <div class="dot green" style="top:90px; left:95px;"></div>
+        <div class="dot green" style="top:110px; left:55px;"></div>
+        <div class="dot green" style="top:120px; left:130px;"></div>
+
+        <!-- SMB cluster dots (mostly amber/red) -->
+        <div class="dot amber" style="top:45px; left:320px;"></div>
+        <div class="dot red"   style="top:65px; left:360px;"></div>
+        <div class="dot amber" style="top:85px; left:330px;"></div>
+        <div class="dot red"   style="top:100px; left:390px;"></div>
+        <div class="dot amber" style="top:120px; left:350px;"></div>
+        <div class="dot red"   style="top:60px; left:420px;"></div>
+
+        <div class="overlay-card">
+          <div class="t">Agent: Dana, SMB owner</div>
+          <div class="entry">Round 3 — noticed price isn't shown upfront, mild frustration</div>
+          <div class="entry">Round 7 — compared to competitor, sentiment drops</div>
+          <div class="entry">Round 12 — still no resolution, marked as "would churn"</div>
+        </div>
+
+        <div class="timeline-bar">Overall sentiment trend — round 1 ████████░░ round 20</div>
+      </div>
+      <div class="annot">Dots cluster spatially by persona segment. Color shifts live as rounds progress. Clicking a dot opens the thought-transcript overlay shown here. Bottom bar shows aggregate sentiment across rounds.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 8 -->
+  <div class="screen">
+    <div class="screen-label">Screen 8</div>
+    <div class="screen-title">Results dashboard</div>
+    <div class="frame">
+      <div class="stat-row">
+        <div class="stat-box"><div class="big">62</div><div class="cap">PMF score (±15)</div></div>
+        <div class="stat-box"><div class="big">71%</div><div class="cap">would recommend</div></div>
+        <div class="stat-box"><div class="big">3</div><div class="cap">top objections</div></div>
+      </div>
+      <div class="row">
+        <div class="col" style="flex:1;">
+          <div class="box solid" style="height:30px;"><span class="lbl">Segment breakdown</span></div>
+          <div class="seg-row">
+            <span style="width:90px;">Enterprise</span>
+            <div class="seg-bar-track"><div class="seg-bar-fill" style="width:78%; background:#639922;"></div></div>
+            <span class="pill green">high conf</span>
+          </div>
+          <div class="seg-row">
+            <span style="width:90px;">SMB</span>
+            <div class="seg-bar-track"><div class="seg-bar-fill" style="width:41%; background:#BA7517;"></div></div>
+            <span class="pill amber">low conf</span>
+          </div>
+          <div class="seg-row">
+            <span style="width:90px;">Mid-market</span>
+            <div class="seg-bar-track"><div class="seg-bar-fill" style="width:60%; background:#639922;"></div></div>
+            <span class="pill green">high conf</span>
+          </div>
+        </div>
+        <div class="col" style="flex:1;">
+          <div class="box solid" style="height:30px;"><span class="lbl">Top objections</span></div>
+          <div class="box" style="height:130px;">ranked objection list with quote excerpts &amp; source links</div>
+        </div>
+      </div>
+      <div class="annot">PMF score and each segment carry a confidence qualifier. Objections link back to the source agent transcripts for traceability.</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 9/10 -->
+  <div class="screen">
+    <div class="screen-label">Screens 9–10 (condensed)</div>
+    <div class="screen-title">Report builder + viewer + chat</div>
+    <div class="frame">
+      <div class="report-layout">
+        <div class="sidebar">
+          <div style="font-weight:600; margin-bottom:8px;">Sections</div>
+          <div class="item active">Executive summary</div>
+          <div class="item">PMF score</div>
+          <div class="item">Methodology</div>
+          <div class="item">Segment breakdown</div>
+          <div class="item">Objections</div>
+          <div class="item">Recommendations</div>
+        </div>
+        <div class="pdf-pane">
+          <div class="pdf-page">
+            <div class="pdf-line" style="width:60%; height:14px;"></div>
+            <div class="pdf-line" style="width:90%;"></div>
+            <div class="pdf-line" style="width:80%;"></div>
+            <div class="pdf-chart"></div>
+            <div class="pdf-line" style="width:95%;"></div>
+            <div class="pdf-line" style="width:70%;"></div>
+          </div>
+        </div>
+        <div class="chat-pane">
+          <div class="chat-msgs">
+            <div class="bubble user">Why is SMB confidence low?</div>
+            <div class="bubble">Only 18 SMB users had usage data connected — most reactions are inferred from market context, not direct behavior.</div>
+          </div>
+          <div class="chat-input">Ask a question…</div>
+        </div>
+      </div>
+      <div class="annot">Sidebar toggles sections and live-updates the PDF preview. Chat is Q&amp;A only — answers can cite source data but won't edit the report directly.</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
