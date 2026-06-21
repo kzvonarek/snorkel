@@ -32,17 +32,18 @@ services:
       EMBEDDING_MODEL: ${AMS_EMBEDDING_MODEL:-text-embedding-3-small}
     command: agent-memory task-worker --concurrency 10
 
-  mirofish:
-    image: ghcr.io/666ghj/mirofish:latest
-    # 加速镜像（如拉取缓慢可替换上方地址）
-    # image: ghcr.nju.edu.cn/666ghj/mirofish:latest
-    container_name: mirofish
+  snorkel:
+    build: .
+    container_name: snorkel
     env_file:
       - .env
     ports:
       - "3000:3000"
       - "5001:5001"
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+    depends_on: [redis, memory-api]
     restart: unless-stopped
+
 volumes:
   redis-data:
-      - ./backend/uploads:/app/backend/uploads
