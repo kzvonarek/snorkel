@@ -22,6 +22,7 @@ const router = useRouter()
 const routeMeta = {
   '/':          { title: 'Overview',           action: '' },
   '/projects':  { title: 'Projects',           action: 'New project' },
+  '/projects/new': { title: 'New project',     action: '' },
   '/connect':   { title: 'Connect data',        action: 'Save connections' },
   '/personas':  { title: 'Personas & segments', action: 'Add persona' },
   '/market':    { title: 'Market context',       action: 'Save' },
@@ -36,6 +37,7 @@ const topbarTitle  = computed(() => routeMeta[route.path]?.title  ?? '')
 const topbarAction = computed(() => routeMeta[route.path]?.action ?? '')
 
 const actionRoutes = {
+  '/projects': '/projects/new',
   '/results': '/report',
 }
 

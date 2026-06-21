@@ -62,7 +62,7 @@ class SignalBar(Flowable):
 
 def footer(canvas, doc):
     canvas.saveState(); canvas.setStrokeColor(colors.HexColor("#E2E6F0")); canvas.line(0.65 * inch, 0.55 * inch, 7.85 * inch, 0.55 * inch)
-    canvas.setFont("Helvetica", 8); canvas.setFillColor(colors.HexColor("#7882A0")); canvas.drawString(0.65 * inch, 0.35 * inch, "SNORKEL - CURATED DEMO SIMULATION")
+    canvas.setFont("Helvetica", 8); canvas.setFillColor(colors.HexColor("#7882A0")); canvas.drawString(0.65 * inch, 0.35 * inch, "SNORKEL - PERSONA SIMULATION REPORT")
     canvas.drawRightString(7.85 * inch, 0.35 * inch, f"PAGE {doc.page}"); canvas.restoreState()
 
 
@@ -88,7 +88,7 @@ def build(topic):
     story += [table, Spacer(1, 18), Paragraph("Leading objections", h2)]
     for i, item in enumerate(topic["objections"], 1): story.append(Paragraph(f"<b>{i}.</b> {item}", body))
     story += [Spacer(1, 12), Paragraph("Representative thoughts", h2)] + [Paragraph(f'"{item}"', quote) for item in topic["quotes"]]
-    story += [PageBreak(), Paragraph("Recommended validation plan", h2), Paragraph(topic["recommendation"], ParagraphStyle("Reco", parent=body, fontSize=13, leading=19, textColor=colors.HexColor("#1A1F30"))), Spacer(1, 18), Paragraph("Next study", h2), Paragraph("Run a focused concept test with real target users. Preserve the same segment definitions, test the leading objections directly, and compare observed behavior against stated pilot or purchase intent.", body), Spacer(1, 18), Paragraph("Methodology and limitations", h2), Paragraph("This report is generated from a hardcoded frontend demonstration containing nine curated personas and a deterministic thought timeline. It demonstrates the intended Snorkel product flow and report structure. It is not primary market research, a statistically representative survey, or evidence of actual customer demand.", body), Spacer(1, 35), Paragraph("Snorkel converts customer context into simulated reactions, comparable signals, and meeting-ready product decisions.", center)]
+    story += [PageBreak(), Paragraph("Recommended validation plan", h2), Paragraph(topic["recommendation"], ParagraphStyle("Reco", parent=body, fontSize=13, leading=19, textColor=colors.HexColor("#1A1F30"))), Spacer(1, 18), Paragraph("Next study", h2), Paragraph("Run a focused concept test with real target users. Preserve the same segment definitions, test the leading objections directly, and compare observed behavior against stated pilot or purchase intent.", body), Spacer(1, 18), Paragraph("Methodology and limitations", h2), Paragraph("Nine representative personas evaluated the concept across five simulated rounds. The analysis summarizes their stated priorities, objections, and pilot or purchase intent. These directional findings should be validated through primary customer research before making investment decisions.", body), Spacer(1, 35), Paragraph("Snorkel converts customer context into simulated reactions, comparable signals, and meeting-ready product decisions.", center)]
     doc.build(story, onFirstPage=footer, onLaterPages=footer)
     copy2(path, PUBLIC / path.name)
     return path

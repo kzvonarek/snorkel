@@ -2,7 +2,7 @@
   <div class="projects">
     <div class="hero">
       <div><span class="eyebrow">Curated demo studies</span><h2>What do you want to test?</h2><p>Create a PMF simulation from one of three fully prepared concepts.</p></div>
-      <BaseButton variant="primary" pill @click="showPicker = true">New project</BaseButton>
+      <BaseButton variant="primary" pill @click="router.push('/projects/new')">New blank project</BaseButton>
     </div>
 
     <div class="project-grid">
@@ -15,28 +15,16 @@
       </button>
     </div>
 
-    <div v-if="showPicker" class="modal-backdrop" @click.self="showPicker = false">
-      <div class="picker">
-        <div class="picker-heading"><div><span class="eyebrow">New project</span><h2>Choose a topic of interest</h2></div><button class="close" @click="showPicker = false">x</button></div>
-        <button v-for="topic in demoTopics" :key="topic.id" class="picker-option" @click="create(topic)">
-          <span class="option-glyph" :style="{ background: topic.color }">{{ topic.glyph }}</span>
-          <span><strong>{{ topic.name }}</strong><small>{{ topic.category }}</small><p>{{ topic.question }}</p></span>
-          <b>Choose -></b>
-        </button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { demoTopics } from '@/data/demoTopics'
 import { launchDemoTopic } from '@/composables/useRun'
 
 const router = useRouter()
-const showPicker = ref(false)
 function create(topic) { launchDemoTopic(topic.id); router.push('/swarm') }
 function openTopic(topic) { create(topic) }
 </script>

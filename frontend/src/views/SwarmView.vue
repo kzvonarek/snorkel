@@ -1,7 +1,7 @@
 <template>
   <div class="swarm-page">
     <DemoModeBanner />
-    <div v-if="run.mode === 'demo'" class="curated-banner"><strong>Live demo simulation</strong><span>Curated personas and deterministic thoughts are playing in real time.</span></div>
+    <div v-if="run.mode === 'demo'" class="curated-banner"><strong>Live persona simulation</strong><span>Nine distinct agents are reacting to the selected concept in real time.</span></div>
     <div class="swarm-layout">
       <div class="arena-card">
         <div class="arena-heading">

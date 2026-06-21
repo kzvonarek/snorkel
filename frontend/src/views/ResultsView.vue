@@ -2,7 +2,7 @@
   <div class="results">
     <DemoModeBanner />
     <div v-if="topic" class="topic-summary" :style="{ borderColor: topic.color }">
-      <div><span>{{ topic.category }} - Curated demo</span><h2>{{ topic.name }}</h2><p>{{ topic.question }}</p></div>
+      <div><span>{{ topic.category }} - Persona simulation</span><h2>{{ topic.name }}</h2><p>{{ topic.question }}</p></div>
       <div class="fit-score"><strong>{{ topic.metrics.fit }}</strong><small>fit signal</small></div>
     </div>
     <div class="stats-row">

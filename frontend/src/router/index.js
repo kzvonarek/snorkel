@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   { path: '/',          name: 'Overview',    component: () => import('@/views/OverviewView.vue') },
   { path: '/projects',  name: 'Projects',    component: () => import('@/views/ProjectsView.vue') },
+  { path: '/projects/new', name: 'NewProject', component: () => import('@/views/NewProjectView.vue') },
   { path: '/connect',   name: 'Connect',     component: () => import('@/views/ConnectDataView.vue') },
   { path: '/personas',  name: 'Personas',    component: () => import('@/views/PersonasView.vue') },
   { path: '/market',    name: 'Market',      component: () => import('@/views/MarketView.vue') },
