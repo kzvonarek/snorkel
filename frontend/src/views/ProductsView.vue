@@ -1,5 +1,6 @@
 <template>
   <div class="products">
+    <div v-if="topic" class="study-banner"><span :style="{ background: topic.color }"></span><div><strong>{{ topic.name }}</strong><small>Product materials used in this simulation</small></div></div>
     <DropZone
       label="Drop product materials here"
       sub="Specs, pitch decks, Figma exports, prototypes — PDF, DOCX, PNG"
@@ -25,9 +26,12 @@
 <script setup>
 import { reactive } from 'vue'
 import DropZone from '@/components/ui/DropZone.vue'
-import { productAssets as raw } from '@/data/products.js'
+import run from '@/composables/useRun'
+import { getDemoTopic } from '@/data/demoTopics'
+import { getStudyInputs } from '@/data/studyInputs'
 
-const assets = reactive([...raw])
+const topic = run.topicId ? getDemoTopic(run.topicId) : null
+const assets = reactive([...(topic ? getStudyInputs(topic.id).products : [])])
 
 function addAssets(files) {
   files.forEach(f => {
@@ -46,6 +50,7 @@ function addAssets(files) {
 
 <style scoped>
 .products { display: flex; flex-direction: column; gap: 24px; }
+.study-banner { display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px; }.study-banner>span { width:10px;height:32px;border-radius:5px; }.study-banner div { display:flex;flex-direction:column; }.study-banner small { color:var(--text-3); }
 
 .asset-grid {
   display: grid;

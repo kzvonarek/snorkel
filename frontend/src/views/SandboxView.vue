@@ -67,12 +67,14 @@ import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Slider from '@/components/ui/Slider.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { personas } from '@/data/personas.js'
-import { environments } from '@/data/environments.js'
-import { productAssets as products } from '@/data/products.js'
-import { launchRun } from '@/composables/useRun.js'
+import run, { launchRun } from '@/composables/useRun.js'
+import { getStudyInputs } from '@/data/studyInputs'
 
 const router = useRouter()
+const inputs = getStudyInputs(run.topicId)
+const personas = inputs.personas
+const environments = inputs.market
+const products = inputs.products
 const canvasNodes = reactive([])
 const rounds = ref(5)
 const agentsPerSegment = ref(5)
