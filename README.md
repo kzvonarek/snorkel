@@ -1,217 +1,170 @@
-# Snorkel — PMF Simulation Studio
+# Snorkel PMF Simulation Studio
 
-Snorkel is a Product-Market Fit analysis tool built on the [MiroFish](https://github.com/666ghj/MiroFish) swarm intelligence engine. It spins up LLM agents that take on personas derived from your customer data, simulates their reactions to a product or idea, and generates a structured PMF report you can chat with.
+Snorkel turns curated customer personas and a product brief into an OASIS social simulation. Product teams can watch agent activity, inspect observed results, generate a Markdown research report, and chat with the report.
 
-## Architecture
+The demo has two explicit modes:
 
-```
-frontend/   Vue 3 + Vite            → http://localhost:3000
-backend/    Flask (Python 3.11+)    → http://localhost:5001
-```
+- **Live OASIS** runs the Flask, LLM, and OASIS pipeline.
+- **Demo data** uses deterministic fixtures if live preparation cannot start. A yellow banner always identifies fixture output; it is never presented as live evidence.
 
-The frontend proxies all `/api` requests to the backend (configured in `frontend/vite.config.js`). The backend optionally connects to an Agent Memory Server (AMS) backed by Redis for persistent agent memory across simulation rounds.
+## Five-Minute Quick Start
 
----
+### Prerequisites
 
-## Prerequisites
+- Node.js 18+
+- Python 3.11 or 3.12 (Python 3.13 is not supported by the OASIS dependency set)
+- [uv](https://docs.astral.sh/uv/)
+- An API key for an OpenAI-compatible chat-completions provider
 
-| Tool | Version |
-|------|---------|
-| Node.js | 18+ |
-| Python | 3.11 – 3.12 |
-| pip or uv | latest |
-| Docker + Docker Compose | for Redis/AMS (optional but recommended) |
+Create the environment file:
 
----
-
-## Environment Setup
-
-Create a `.env` file in the **repo root** (`snorkel/.env`). The backend loads it from there automatically.
-
-```bash
-cp .env.example .env
+```powershell
+Copy-Item .env.example .env
 ```
 
-Then fill in the required values:
-
-### Required
+Set at least these values in `.env`:
 
 ```env
-# LLM API — any OpenAI-compatible provider works (OpenAI, Alibaba Qwen, etc.)
-LLM_API_KEY=your_api_key_here
-LLM_BASE_URL=https://api.openai.com/v1      # or https://dashscope.aliyuncs.com/compatible-mode/v1 for Qwen
-LLM_MODEL_NAME=gpt-4o-mini                 # or qwen-plus, etc.
+LLM_API_KEY=your_key
+LLM_BASE_URL=https://api.openai.com/v1
+LLM_MODEL_NAME=gpt-4o-mini
+AMS_ENABLED=false
 ```
 
-### Optional — Agent Memory Server (AMS)
+Install dependencies:
 
-AMS gives agents persistent long-term memory across simulation rounds using Redis. Without it the app still works but agents won't remember previous rounds.
-
-```env
-AMS_ENABLED=true
-AMS_BASE_URL=http://localhost:8000          # where the memory API runs
-AMS_API_KEY=                               # leave blank if DISABLE_AUTH=true
-AMS_TIMEOUT=30
-AMS_GENERATION_MODEL=gpt-4o-mini           # model used by AMS for memory summarization
-AMS_EMBEDDING_MODEL=text-embedding-3-small # model used by AMS for vector search
+```powershell
+npm install
+npm --prefix frontend install
+Set-Location backend
+uv sync --dev
+Set-Location ..
 ```
 
-> **Note:** AMS uses OpenAI's API for its own embedding and generation calls, independent of your `LLM_API_KEY`. Make sure the key you use has access to the models specified in `AMS_GENERATION_MODEL` and `AMS_EMBEDDING_MODEL` if you're using OpenAI.
+Start both applications:
 
-### Optional — tuning
-
-```env
-FLASK_DEBUG=True
-FLASK_HOST=0.0.0.0
-FLASK_PORT=5001
-OASIS_DEFAULT_MAX_ROUNDS=10
-REPORT_AGENT_MAX_TOOL_CALLS=5
-REPORT_AGENT_MAX_REFLECTION_ROUNDS=2
-REPORT_AGENT_TEMPERATURE=0.5
-```
-
----
-
-## Running Locally
-
-### 1. Start Redis + Agent Memory Server (optional)
-
-If you want agent memory, start the Redis/AMS services:
-
-```bash
-docker compose up -d redis memory-api memory-worker
-```
-
-This starts:
-- **Redis** on port `6379`
-- **AMS API** on port `8000`
-- **AMS task worker** (background job processor)
-
-To stop: `docker compose down`
-
-### 2. Install dependencies
-
-```bash
-npm run setup:all
-```
-
-This installs root npm packages, frontend npm packages, and backend Python packages.
-
-### 3. Start both services
-
-```bash
+```powershell
 npm run dev
 ```
 
-This runs the backend and frontend concurrently. The backend starts on `http://localhost:5001` and the frontend on `http://localhost:3000`.
+Open `http://localhost:3000`. The backend health check is `http://localhost:5001/health`.
 
-Health check: `curl http://localhost:5001/health`
+## Demo Walkthrough
 
----
+1. Open **All projects** and select **New project**.
+2. Choose one of the three curated studies: Orbit Note, Emberwild, or Harbor Commons. Each includes nine personas, a topic-specific real-time thought sequence, results, and a downloadable PDF report.
+3. Watch the colored agents move and generate thoughts in **Live swarm feed**.
+4. Continue to **Results dashboard**, then open **Report & chat** to download the matching PDF.
 
-## Deployment
+For the live OASIS path:
 
-### Docker
+1. Open **Configure run**.
+2. Drag at least one persona segment and one product asset onto the canvas. Market context is optional.
+3. Keep the run small for a presentation: 2-5 rounds and 1-2 agents per segment.
+4. Select **Run simulation**. Snorkel creates the project, prepares persona profiles, and starts a Twitter-style OASIS run.
 
-Build and run the full stack with Docker Compose:
+## Architecture
 
-```bash
-docker compose up -d
+```text
+frontend/   Vue 3 + Vite                 http://localhost:3000
+backend/    Flask + OASIS + report agent http://localhost:5001
+Redis AMS   optional post-run indexing   http://localhost:8000
 ```
 
-Or build just the Snorkel image:
+OASIS owns the agents' in-round social environment and SQLite activity ledger. Redis Agent Memory Server is optional infrastructure for indexing and retrieving activity after it is emitted; it is not OASIS's native in-round memory.
 
-```bash
-docker compose build snorkel
+The active browser run is stored in `sessionStorage`, so moving among Swarm, Results, and Report does not discard it. Live and fixture adapters expose the same normalized frontend state.
+
+## Optional Redis AMS
+
+For activity indexing and semantic retrieval, enable AMS in `.env` and start its services:
+
+```powershell
+docker compose up -d redis memory-api memory-worker
 ```
-
-### Manual Deployment
-
-**Backend:**
-
-```bash
-cd backend
-pip install -r requirements.txt
-# Set environment variables (or use a .env file)
-export LLM_API_KEY=...
-python run.py
-```
-
-For production, run behind gunicorn:
-```bash
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5001 "app:create_app()"
-```
-
-**Frontend:**
-
-```bash
-cd frontend
-npm install
-npm run build       # outputs to frontend/dist/
-```
-
-Serve `frontend/dist/` with any static host (nginx, Vercel, Netlify, etc.). Set the `VITE_API_BASE_URL` env var if your backend is on a different domain:
 
 ```env
-VITE_API_BASE_URL=https://your-backend.example.com
+AMS_ENABLED=true
+AMS_BASE_URL=http://localhost:8000
+AMS_API_KEY=
+AMS_TIMEOUT=30
+AMS_GENERATION_MODEL=gpt-4o-mini
+AMS_EMBEDDING_MODEL=text-embedding-3-small
 ```
 
----
+AMS may use separate generation and embedding models. Confirm that the supplied provider key supports both.
 
-## Project Structure
+## Tests and Build
 
-```
-snorkel/
-├── .env                    # your environment variables (create this)
-├── .env.example            # environment variable template
-├── package.json            # root npm scripts (dev, build, setup)
-├── Dockerfile              # multi-stage build for frontend + backend
-├── docker-compose.yml      # Redis + AMS + Snorkel services
-├── backend/                # Flask API server
-│   ├── app/
-│   │   ├── api/            # route handlers (simulation, report)
-│   │   ├── services/       # core logic (simulation runner, memory, personas)
-│   │   ├── models/         # project/simulation data models
-│   │   └── config.py       # loads .env from repo root
-│   ├── requirements.txt
-│   └── run.py              # entry point → http://localhost:5001
-├── frontend/               # Vue 3 app
-│   ├── src/
-│   │   ├── api/            # axios wrappers for backend endpoints
-│   │   ├── views/          # page components
-│   │   └── main.js
-│   ├── vite.config.js      # proxies /api → localhost:5001
-│   └── package.json        # entry point → http://localhost:3000
-└── planning/               # design docs and wireframes
+Use Python 3.11 or 3.12 and run backend tests from the backend directory so `app` resolves correctly:
+
+```powershell
+Set-Location backend
+uv run pytest tests -q
+Set-Location ..
+npm --prefix frontend test
+npm run build
 ```
 
----
+## API Surface
 
-## Key API Endpoints
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Backend health |
+| `POST` | `/api/projects` | Persist a product brief and simulation requirement |
+| `GET` | `/api/projects` | List projects |
+| `GET` | `/api/projects/{id}` | Retrieve a project and its text context |
+| `POST` | `/api/simulation/create` | Create a simulation for a project |
+| `POST` | `/api/simulation/prepare` | Generate config and profiles from persona inputs |
+| `POST` | `/api/simulation/prepare/status` | Poll preparation |
+| `POST` | `/api/simulation/start` | Start an OASIS run |
+| `GET` | `/api/simulation/{id}/run-status` | Poll run progress |
+| `GET` | `/api/simulation/{id}/actions` | Read observed actions |
+| `GET` | `/api/simulation/{id}/timeline` | Read round summaries |
+| `GET` | `/api/simulation/{id}/agent-stats` | Read activity by agent |
+| `POST` | `/api/report/generate` | Start Markdown report generation |
+| `POST` | `/api/report/generate/status` | Poll report generation |
+| `GET` | `/api/report/{id}` | Retrieve a report |
+| `GET` | `/api/report/{id}/download` | Download Markdown |
+| `POST` | `/api/report/chat` | Chat with the report agent |
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Backend health check |
-| POST | `/api/simulation/create` | Create a new simulation |
-| POST | `/api/simulation/start` | Start a simulation |
-| GET | `/api/simulation/list` | List simulations |
-| GET | `/api/simulation/{id}` | Get simulation status/details |
-| POST | `/api/simulation/interview/batch` | Interview agents post-simulation |
-| POST | `/api/report/generate` | Generate PMF report |
-| GET | `/api/report/list` | List reports |
-| GET | `/api/report/{id}` | Get a report |
-| POST | `/api/report/chat` | Chat with a report |
-| POST | `/api/graph/build` | Build agent knowledge graph |
+## Project Layout
 
----
+```text
+backend/app/api/        Flask route handlers
+backend/app/services/   OASIS runner, persona, memory, and reporting logic
+backend/tests/          Backend contract and service tests
+frontend/src/api/       HTTP client wrappers
+frontend/src/composables/useRun.js  Persisted live/fixture orchestration
+frontend/src/views/     Demo workflow screens
+planning/               Product plan, wireframes, and presentation material
+```
 
 ## Troubleshooting
 
-**`LLM_API_KEY 未配置` on startup** — The backend can't find your `.env`. Make sure it lives at `snorkel/.env` (repo root), not inside `backend/`.
+**`ModuleNotFoundError: flask` or another Python package**
 
-**AMS connection errors** — If you see memory-related errors but don't need persistent memory, set `AMS_ENABLED=false` in your `.env`.
+Run `uv sync --dev` inside `backend`, then use `uv run python run.py` or the root `npm run dev` command. A root `.venv` created with Python 3.13 is not compatible with this project.
 
-**Frontend shows blank or CORS errors** — Make sure the backend is running on port 5001 before starting the frontend. The Vite proxy handles CORS in dev; in production you'll need CORS headers on the backend or a reverse proxy.
+**The app immediately shows Demo data**
 
-**Python version errors** — The backend requires Python 3.11 or 3.12 (not 3.13+). Check with `python --version`.
+Read the yellow banner for the live failure reason. Common causes are a missing `.env`, an invalid `LLM_API_KEY`, an unsupported model, or the backend not running on port 5001. After correcting the issue, return to Configure run and start a new run.
+
+**AMS connection failures**
+
+Set `AMS_ENABLED=false` for the core demo, or verify `docker compose ps` and `http://localhost:8000/health` before enabling indexing.
+
+**Frontend build fails with an access error under OneDrive**
+
+OneDrive or managed filesystem policies can prevent esbuild from traversing parent directories. Run the build from a normal local checkout outside a synchronized folder, or allow the Node/esbuild process access to the workspace. This is distinct from a Vue compilation error.
+
+**The report takes a long time**
+
+Live report generation performs multiple LLM calls. Use fewer agents and rounds for a presentation. Fixture mode produces a deterministic report immediately.
+
+## Current Boundaries
+
+- Inputs are curated product briefs, persona segments, and market context already represented in the demo UI.
+- Curated demo studies include verified three-page PDFs. Reports generated by the live OASIS backend remain Markdown; dynamic PDF export is a later milestone.
+- File uploads, CSV persona import, production connectors, evidence-linked PMF scoring, and structured sentiment analysis are subsequent milestones.
+- The initial live path uses the Twitter-style OASIS environment for reliability.

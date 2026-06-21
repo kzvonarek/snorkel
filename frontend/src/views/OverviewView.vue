@@ -117,7 +117,7 @@ const outputTiles = [
   {
     to: "/report",
     label: "Report & chat",
-    desc: "Editable PDF report with AI chat refinement.",
+    desc: "Download the curated PDF and ask follow-up questions.",
     color: "#4B5FA8",
     glyph: "▤",
   },

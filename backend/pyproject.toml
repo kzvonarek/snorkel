@@ -17,7 +17,7 @@ dependencies = [
     "openai>=1.0.0",
     
     # Zep Cloud
-    "agent-memory-client>=0.14.1",
+    "agent-memory-client>=0.14.0,<0.15",
     
     # OASIS 社交媒体模拟
     "camel-oasis==0.2.5",
