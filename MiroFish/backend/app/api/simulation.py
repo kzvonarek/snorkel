@@ -9,8 +9,8 @@ from flask import request, jsonify, send_file
 
 from . import simulation_bp
 from ..config import Config
-from ..services.zep_entity_reader import ZepEntityReader
 from ..services.oasis_profile_generator import OasisProfileGenerator
+from ..services.persona import PersonaInput
 from ..services.simulation_manager import SimulationManager, SimulationStatus
 from ..services.simulation_runner import SimulationRunner, RunnerStatus
 from ..utils.logger import get_logger
@@ -45,7 +45,6 @@ def optimize_interview_prompt(prompt: str) -> str:
 
 # ============== 实体读取接口 ==============
 
-@simulation_bp.route('/entities/<graph_id>', methods=['GET'])
 def get_graph_entities(graph_id: str):
     """
     获取图谱中的所有实体（已过滤）
@@ -57,19 +56,13 @@ def get_graph_entities(graph_id: str):
         enrich: 是否获取相关边信息（默认true）
     """
     try:
-        if not Config.ZEP_API_KEY:
-            return jsonify({
-                "success": False,
-                "error": t('api.zepApiKeyMissing')
-            }), 500
-        
         entity_types_str = request.args.get('entity_types', '')
         entity_types = [t.strip() for t in entity_types_str.split(',') if t.strip()] if entity_types_str else None
         enrich = request.args.get('enrich', 'true').lower() == 'true'
         
         logger.info(f"获取图谱实体: graph_id={graph_id}, entity_types={entity_types}, enrich={enrich}")
         
-        reader = ZepEntityReader()
+        return jsonify({"success": False, "error": "Entity graph routes were removed; provide personas instead."}), 410
         result = reader.filter_defined_entities(
             graph_id=graph_id,
             defined_entity_types=entity_types,
@@ -90,17 +83,10 @@ def get_graph_entities(graph_id: str):
         }), 500
 
 
-@simulation_bp.route('/entities/<graph_id>/<entity_uuid>', methods=['GET'])
 def get_entity_detail(graph_id: str, entity_uuid: str):
     """获取单个实体的详细信息"""
     try:
-        if not Config.ZEP_API_KEY:
-            return jsonify({
-                "success": False,
-                "error": t('api.zepApiKeyMissing')
-            }), 500
-        
-        reader = ZepEntityReader()
+        return jsonify({"success": False, "error": "Entity graph routes were removed; provide personas instead."}), 410
         entity = reader.get_entity_with_context(graph_id, entity_uuid)
         
         if not entity:
@@ -123,19 +109,12 @@ def get_entity_detail(graph_id: str, entity_uuid: str):
         }), 500
 
 
-@simulation_bp.route('/entities/<graph_id>/by-type/<entity_type>', methods=['GET'])
 def get_entities_by_type(graph_id: str, entity_type: str):
     """获取指定类型的所有实体"""
     try:
-        if not Config.ZEP_API_KEY:
-            return jsonify({
-                "success": False,
-                "error": t('api.zepApiKeyMissing')
-            }), 500
-        
         enrich = request.args.get('enrich', 'true').lower() == 'true'
         
-        reader = ZepEntityReader()
+        return jsonify({"success": False, "error": "Entity graph routes were removed; provide personas instead."}), 410
         entities = reader.get_entities_by_type(
             graph_id=graph_id,
             entity_type=entity_type,
@@ -208,17 +187,10 @@ def create_simulation():
                 "error": t('api.projectNotFound', id=project_id)
             }), 404
         
-        graph_id = data.get('graph_id') or project.graph_id
-        if not graph_id:
-            return jsonify({
-                "success": False,
-                "error": t('api.graphNotBuilt')
-            }), 400
-        
         manager = SimulationManager()
         state = manager.create_simulation(
             project_id=project_id,
-            graph_id=graph_id,
+            graph_id=data.get('graph_id', ''),
             enable_twitter=data.get('enable_twitter', True),
             enable_reddit=data.get('enable_reddit', True),
         )
@@ -467,22 +439,17 @@ def prepare_simulation():
         entity_types_list = data.get('entity_types')
         use_llm_for_profiles = data.get('use_llm_for_profiles', True)
         parallel_profile_count = data.get('parallel_profile_count', 5)
+        personas_payload = data.get('personas')
+        personas = [PersonaInput.from_dict(item) for item in personas_payload] if personas_payload else None
+        if personas:
+            manager.save_personas(simulation_id, personas)
         
         # ========== 同步获取实体数量（在后台任务启动前） ==========
         # 这样前端在调用prepare后立即就能获取到预期Agent总数
         try:
-            logger.info(f"同步获取实体数量: graph_id={state.graph_id}")
-            reader = ZepEntityReader()
-            # 快速读取实体（不需要边信息，只统计数量）
-            filtered_preview = reader.filter_defined_entities(
-                graph_id=state.graph_id,
-                defined_entity_types=entity_types_list,
-                enrich_with_edges=False  # 不获取边信息，加快速度
-            )
-            # 保存实体数量到状态（供前端立即获取）
-            state.entities_count = filtered_preview.filtered_count
-            state.entity_types = list(filtered_preview.entity_types)
-            logger.info(f"预期实体数量: {filtered_preview.filtered_count}, 类型: {filtered_preview.entity_types}")
+            if personas:
+                state.entities_count = len(personas)
+                state.entity_types = sorted({persona.segment for persona in personas})
         except Exception as e:
             logger.warning(f"同步获取实体数量失败（将在后台任务中重试）: {e}")
             # 失败不影响后续流程，后台任务会重新获取
@@ -587,7 +554,8 @@ def prepare_simulation():
                     defined_entity_types=entity_types_list,
                     use_llm_for_profiles=use_llm_for_profiles,
                     progress_callback=progress_callback,
-                    parallel_profile_count=parallel_profile_count
+                    parallel_profile_count=parallel_profile_count,
+                    personas=personas
                 )
                 
                 # 任务完成
@@ -1390,48 +1358,24 @@ def generate_profiles():
     try:
         data = request.get_json() or {}
         
-        graph_id = data.get('graph_id')
-        if not graph_id:
+        personas_payload = data.get('personas')
+        if not personas_payload:
             return jsonify({
                 "success": False,
-                "error": t('api.requireGraphId')
+                "error": "personas are required"
             }), 400
-        
-        entity_types = data.get('entity_types')
-        use_llm = data.get('use_llm', True)
+
         platform = data.get('platform', 'reddit')
-        
-        reader = ZepEntityReader()
-        filtered = reader.filter_defined_entities(
-            graph_id=graph_id,
-            defined_entity_types=entity_types,
-            enrich_with_edges=True
-        )
-        
-        if filtered.filtered_count == 0:
-            return jsonify({
-                "success": False,
-                "error": t('api.noMatchingEntities')
-            }), 400
-        
+        personas = [PersonaInput.from_dict(item) for item in personas_payload]
         generator = OasisProfileGenerator()
-        profiles = generator.generate_profiles_from_entities(
-            entities=filtered.entities,
-            use_llm=use_llm
-        )
-        
-        if platform == "reddit":
-            profiles_data = [p.to_reddit_format() for p in profiles]
-        elif platform == "twitter":
-            profiles_data = [p.to_twitter_format() for p in profiles]
-        else:
-            profiles_data = [p.to_dict() for p in profiles]
+        profiles = generator.generate_profiles_from_personas(personas)
+        profiles_data = [p.to_dict() for p in profiles]
         
         return jsonify({
             "success": True,
             "data": {
                 "platform": platform,
-                "entity_types": list(filtered.entity_types),
+                "entity_types": sorted({persona.segment for persona in personas}),
                 "count": len(profiles_data),
                 "profiles": profiles_data
             }
@@ -1501,7 +1445,10 @@ def start_simulation():
 
         platform = data.get('platform', 'parallel')
         max_rounds = data.get('max_rounds')  # 可选：最大模拟轮数
-        enable_graph_memory_update = data.get('enable_graph_memory_update', False)  # 可选：是否启用图谱记忆更新
+        enable_memory_indexing = data.get(
+            'enable_memory_indexing',
+            data.get('enable_graph_memory_update', Config.AMS_ENABLED)
+        )
         force = data.get('force', False)  # 可选：强制重新开始
 
         # 验证 max_rounds 参数
@@ -1582,30 +1529,14 @@ def start_simulation():
                 }), 400
         
         # 获取图谱ID（用于图谱记忆更新）
-        graph_id = None
-        if enable_graph_memory_update:
-            # 从模拟状态或项目中获取 graph_id
-            graph_id = state.graph_id
-            if not graph_id:
-                # 尝试从项目中获取
-                project = ProjectManager.get_project(state.project_id)
-                if project:
-                    graph_id = project.graph_id
-            
-            if not graph_id:
-                return jsonify({
-                    "success": False,
-                    "error": t('api.graphIdRequiredForMemory')
-                }), 400
-            
-            logger.info(f"启用图谱记忆更新: simulation_id={simulation_id}, graph_id={graph_id}")
+        graph_id = simulation_id
         
         # 启动模拟
         run_state = SimulationRunner.start_simulation(
             simulation_id=simulation_id,
             platform=platform,
             max_rounds=max_rounds,
-            enable_graph_memory_update=enable_graph_memory_update,
+            enable_graph_memory_update=enable_memory_indexing,
             graph_id=graph_id
         )
         
@@ -1616,10 +1547,12 @@ def start_simulation():
         response_data = run_state.to_dict()
         if max_rounds:
             response_data['max_rounds_applied'] = max_rounds
-        response_data['graph_memory_update_enabled'] = enable_graph_memory_update
+        response_data['memory_indexing_enabled'] = enable_memory_indexing
+        response_data['graph_memory_update_enabled'] = enable_memory_indexing
         response_data['force_restarted'] = force_restarted
-        if enable_graph_memory_update:
-            response_data['graph_id'] = graph_id
+        if enable_memory_indexing:
+            from ..services.redis_memory_writer import RedisMemoryManager
+            response_data['memory_indexing'] = RedisMemoryManager.status(simulation_id)
         
         return jsonify({
             "success": True,
@@ -1701,6 +1634,21 @@ def stop_simulation():
 
 
 # ============== 实时状态监控接口 ==============
+
+@simulation_bp.route('/<simulation_id>/memory-indexing-status', methods=['GET'])
+def get_memory_indexing_status(simulation_id: str):
+    from ..services.redis_memory import RedisMemoryClient
+    from ..services.redis_memory_writer import RedisMemoryManager
+
+    return jsonify({
+        "success": True,
+        "data": {
+            "simulation_id": simulation_id,
+            "indexing": RedisMemoryManager.status(simulation_id),
+            "server": RedisMemoryClient().health(),
+        }
+    })
+
 
 @simulation_bp.route('/<simulation_id>/run-status', methods=['GET'])
 def get_run_status(simulation_id: str):

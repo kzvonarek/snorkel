@@ -1,4 +1,37 @@
 services:
+  redis:
+    image: redis/redis-stack-server:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  memory-api:
+    image: redislabs/agent-memory-server:latest
+    restart: unless-stopped
+    depends_on: [redis]
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      OPENAI_API_KEY: ${LLM_API_KEY}
+      GENERATION_MODEL: ${AMS_GENERATION_MODEL:-gpt-4o-mini}
+      EMBEDDING_MODEL: ${AMS_EMBEDDING_MODEL:-text-embedding-3-small}
+      DISABLE_AUTH: ${AMS_DISABLE_AUTH:-true}
+    command: agent-memory api --host 0.0.0.0 --port 8000
+
+  memory-worker:
+    image: redislabs/agent-memory-server:latest
+    restart: unless-stopped
+    depends_on: [redis]
+    environment:
+      REDIS_URL: redis://redis:6379
+      OPENAI_API_KEY: ${LLM_API_KEY}
+      GENERATION_MODEL: ${AMS_GENERATION_MODEL:-gpt-4o-mini}
+      EMBEDDING_MODEL: ${AMS_EMBEDDING_MODEL:-text-embedding-3-small}
+    command: agent-memory task-worker --concurrency 10
+
   mirofish:
     image: ghcr.io/666ghj/mirofish:latest
     # 加速镜像（如拉取缓慢可替换上方地址）
@@ -10,5 +43,6 @@ services:
       - "3000:3000"
       - "5001:5001"
     restart: unless-stopped
-    volumes:
+volumes:
+  redis-data:
       - ./backend/uploads:/app/backend/uploads
