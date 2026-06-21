@@ -6,7 +6,6 @@ This repository contains a full-stack multi-agent simulation platform with:
 - A Vue frontend (`Vite`) for project setup, scenario execution, and results.
 - Optional memory infrastructure (`Redis` + `agent-memory-server`) for long-term state.
 - Planning and product docs used during development.
-- A legacy MiroFish frontend snapshot preserved outside the main app code.
 
 ## Repository Layout
 
